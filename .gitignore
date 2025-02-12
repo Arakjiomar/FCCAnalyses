@@ -13,6 +13,8 @@ __pycache__/
 # HTCondor
 # ignores <lxplus-username>.cc file in the top FCCAnalyses directory
 /*.cc
+# ignores <lxplus-username>.cc file in the examples analyses directory
+/examples/*/*/*.cc
 
 # Editors
 *~
@@ -109,3 +111,6 @@ benchmark*json
 # Graphviz graphs
 *.dot
 *.png
+
+# Notebooks
+*.ipynb_checkpoints
