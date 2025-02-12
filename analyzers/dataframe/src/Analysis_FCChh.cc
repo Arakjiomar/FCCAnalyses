@@ -966,6 +966,38 @@ AnalysisFCChh::get_tagged_jets(
   return tagged_jets;
 }
 
+ROOT::VecOps::RVec<bool>
+AnalysisFCChh::get_pass_tag(
+    ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> jets,
+    ROOT::VecOps::RVec<edm4hep::ParticleIDData> jet_tags,
+    ROOT::VecOps::RVec<podio::ObjectID> jet_tags_indices,
+    ROOT::VecOps::RVec<float> jet_tags_values, int algoIndex) {
+
+  ROOT::VecOps::RVec<bool> pass_tag;
+
+  // make sure we have the right collections: every tag should have exactly one
+  // jet index
+  assert(jet_tags.size() == jet_tags_indices.size());
+
+  for (size_t jet_tags_i = 0; jet_tags_i < jet_tags.size(); ++jet_tags_i) {
+
+    const auto tag = static_cast<unsigned>(
+        jet_tags_values[jet_tags[jet_tags_i].parameters_begin]);
+
+    if (tag & (1 << algoIndex)) {
+      pass_tag.push_back(true);
+    }
+    else {
+      pass_tag.push_back(false);
+    }
+  }
+
+  // check that the final list has the same size as the original Jet collection
+  assert(pass_tag.size() == jet_tags_indices.size());
+
+  return pass_tag;
+}
+
 // return the full jets rather than the list of tags
 //  ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData>
 //  AnalysisFCChh::get_tagged_jets(ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData>
@@ -1784,6 +1816,19 @@ AnalysisFCChh::get_HT_true(ROOT::VecOps::RVec<RecoParticlePair> ll_pair,
   float HT_w_inv = lep1_pT + lep2_pT + b1_pT + b2_pT;
   HT_wInv_vector.push_back(HT_w_inv);
   return HT_wInv_vector;
+}
+
+float
+AnalysisFCChh::get_HT_jets(ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> jets) {
+
+  float HT_jets = 0;
+
+  for (size_t iJet = 0; iJet < jets.size(); ++iJet) {
+    float jet_pt = sqrt(jets[iJet].momentum.x * jets[iJet].momentum.x + jets[iJet].momentum.y * jets[iJet].momentum.y);
+    HT_jets += jet_pt;
+  }
+
+  return HT_jets;
 }
 
 // construct ratio of HT2 and HT_w_inv

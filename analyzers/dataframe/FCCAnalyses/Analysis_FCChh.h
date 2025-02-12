@@ -205,7 +205,11 @@ get_untagged_jets(ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> jets,
                   ROOT::VecOps::RVec<int> index,
                   ROOT::VecOps::RVec<edm4hep::ParticleIDData> pid,
                   ROOT::VecOps::RVec<float> values, int algoIndex);
-
+ROOT::VecOps::RVec<bool>
+get_pass_tag(ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> jets,
+                ROOT::VecOps::RVec<edm4hep::ParticleIDData> jet_tags,
+                ROOT::VecOps::RVec<podio::ObjectID> jet_tags_indices,
+                ROOT::VecOps::RVec<float> jet_tags_values, int algoIndex);
 // tau jets
 ROOT::VecOps::RVec<edm4hep::MCParticleData> find_truth_matches(
     ROOT::VecOps::RVec<edm4hep::MCParticleData> truth_parts,
@@ -303,6 +307,9 @@ get_HT_true(ROOT::VecOps::RVec<RecoParticlePair> ll_pair,
             ROOT::VecOps::RVec<RecoParticlePair> bb_pair);
 ROOT::VecOps::RVec<float> get_HT2_ratio(ROOT::VecOps::RVec<float> HT2,
                                         ROOT::VecOps::RVec<float> HT_wInv);
+float
+get_HT_jets(ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> jets);
+                              
 ROOT::VecOps::RVec<float>
 get_MET_significance(ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> MET,
                      ROOT::VecOps::RVec<float> HT_true, bool doSqrt = true);
