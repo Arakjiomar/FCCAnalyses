@@ -1,4 +1,5 @@
 import ROOT
+import os 
 
 # global parameters
 intLumi        = 30e+06 #in pb-1
@@ -6,12 +7,12 @@ ana_tex        = 'pp #rightarrow ttH(#rightarrow #gamma#gamma)'
 delphesVersion = '3.4.2'
 energy         = 100
 collider       = 'FCC-hh'
-inputDir       = '/eos/experiment/fcc/hh/analysis_ntuples/fcc_v06/II/ttHyy_analysis/final/'
-formats        = ['png'] #['png','pdf']
+inputDir       = os.environ.get('ttH_yy_DIR') + "/final/"
+formats        = ['pdf'] #['png','pdf']
 yaxis          = ['lin','log']
 stacksig       = ['nostack']
 # stacksig       = ['stack','nostack']
-outdir         = './plots_ttHyy_analysis/'
+outdir         = os.environ.get('ttH_yy_DIR') + '/plots/'
 plotStatUnc    = True
 
 variables = ['n_photons','n_bjets', 'm_yy']
@@ -20,7 +21,7 @@ variables = ['n_photons','n_bjets', 'm_yy']
 
 ### Dictionary with the analysis name as a key, and the list of selections to be plotted for this analysis. The name of the selections should be the same than in the final selection
 selections = {}
-selections['ttHyy_analysis']   = ["sel1_bjets","sel2_photons"]
+selections['ttHyy_analysis'] = ["sel1_bjets", "sel2_photons"]
 
 extralabel = {}
 extralabel['sel1_bjets'] = "b-jet pair"

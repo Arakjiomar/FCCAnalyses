@@ -1,15 +1,17 @@
-#Input directory where the files produced at the pre-selection level are
-inputDir  = "/eos/experiment/fcc/hh/analysis_ntuples/fcc_v06/II/ttHyy_analysis/"
+import os 
 
 #Input directory where the files produced at the pre-selection level are
-outputDir  = "/eos/experiment/fcc/hh/analysis_ntuples/fcc_v06/II/ttHyy_analysis/final/"
+inputDir= os.environ.get('ttH_yy_DIR') + '/ntuples/'
+
+#Input directory where the files produced at the pre-selection level are
+outputDir  = os.environ.get('ttH_yy_DIR') + '/final/'
 
 processList = {
     #Signal
-    # 'mgp8_pp_tth01j_5f_haa':{}, #output file from analysis_stage1.py
+    'mgp8_pp_tth01j_5f_haa':{}, #output file from analysis_stage1.py
     #Backgrounds
-    # 'mgp8_pp_jjaa_5f':{}, #output file from analysis_stage1.py
-    'mgp8_pp_ttaa_semilep_5f_100TeV':{}, #output file from analysis_stage1.py
+    'mgp8_pp_jjaa_5f':{}, #output file from analysis_stage1.py
+    'mgp8_pp_ttaa_semilep_5f_100TeV':{} #output file from analysis_stage1.py
 }
 
 #Link to the dictionary that contains all the cross section informations etc...
@@ -38,8 +40,10 @@ do_weighted = True
 
 # Dictionary of the list of cuts. The key is the name of the selection that will be added to the output file
 cutList = {
-            "sel1_bjets":"n_bjets > 1", # at least two b-jets 
-            "sel2_photons":"n_bjets > 1 && n_photons > 1", # at least two b-jets, and two photons
+            "sel0_nocuts":"n_photons >= 0", # all events
+            "sel1_photons":"n_photons > 1",
+            "sel2_bjets":"n_photons > 1 && n_bjets > 1", # at least two b-jets 
+            "sel3_myy_window":"n_bjets > 1 && n_photons > 1 && m_yy[0] > 120. && m_yy[0] <= 130.", # at least two b-jets, and two photons
             # add more cuts here: note you need to && them, they are not sequential!
             }
 
@@ -47,5 +51,5 @@ cutList = {
 histoList = {
     "n_photons":{"name":"n_photons","title":"Number of photons","bin":10,"xmin":0.,"xmax":10.},
     "n_bjets":{"name":"n_bjets","title":"Number of b-jets","bin":10,"xmin":0.,"xmax":10.},
-    "m_yy":{"name":"m_yy","title":"m_{#gamma#gamma}","bin":30,"xmin":110.,"xmax":140.},
+    "m_yy":{"name":"m_yy","title":"m_{#gamma#gamma} [GeV]","bin":30,"xmin":110.,"xmax":140.}
 }
