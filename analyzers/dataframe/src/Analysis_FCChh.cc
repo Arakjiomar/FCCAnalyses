@@ -966,14 +966,14 @@ AnalysisFCChh::get_tagged_jets(
   return tagged_jets;
 }
 
-ROOT::VecOps::RVec<bool>
-AnalysisFCChh::get_pass_tag(
+ROOT::VecOps::RVec<int>
+AnalysisFCChh::get_tagged_jets_idx(
     ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> jets,
     ROOT::VecOps::RVec<edm4hep::ParticleIDData> jet_tags,
     ROOT::VecOps::RVec<podio::ObjectID> jet_tags_indices,
     ROOT::VecOps::RVec<float> jet_tags_values, int algoIndex) {
 
-  ROOT::VecOps::RVec<bool> pass_tag;
+  ROOT::VecOps::RVec<int> tagged_jets_idx;
 
   // make sure we have the right collections: every tag should have exactly one
   // jet index
@@ -985,6 +985,35 @@ AnalysisFCChh::get_pass_tag(
         jet_tags_values[jet_tags[jet_tags_i].parameters_begin]);
 
     if (tag & (1 << algoIndex)) {
+      tagged_jets_idx.push_back(jet_tags_indices[jet_tags_i].index);
+    }
+  }
+  return tagged_jets_idx;
+}
+
+ROOT::VecOps::RVec<bool>
+AnalysisFCChh::get_pass_tag(
+  ROOT::VecOps::RVec<int> jet_indices,
+  ROOT::VecOps::RVec<edm4hep::ParticleIDData> jet_tags,
+  ROOT::VecOps::RVec<podio::ObjectID> jet_tags_indices,
+  ROOT::VecOps::RVec<float> jet_tags_values, int algoIndex) {
+  
+  // define result vector
+  ROOT::VecOps::RVec<bool> pass_tag;
+  pass_tag.reserve(jet_indices.size());
+
+  assert(jet_tags.size() == jet_tags_indices.size());
+
+  // loop over the jet indices (from the main jet collection)
+  for (size_t i = 0; i < jet_indices.size(); ++i) {
+
+    // get the index of the jet in the original collection
+    // corresponding to the index in the jet tags collection
+    const auto jet_tags_i = jet_indices[i];
+    const auto tag = static_cast<unsigned>(
+        jet_tags_values[jet_tags[jet_tags_i].parameters_begin]);
+
+    if (tag & (1 << algoIndex)) {
       pass_tag.push_back(true);
     }
     else {
@@ -992,10 +1021,33 @@ AnalysisFCChh::get_pass_tag(
     }
   }
 
-  // check that the final list has the same size as the original Jet collection
-  assert(pass_tag.size() == jet_tags_indices.size());
+  // check that the final list has the same size as the jet collection
+  assert(pass_tag.size() == jet_indices.size());
 
   return pass_tag;
+}
+
+ROOT::VecOps::RVec<int>
+AnalysisFCChh::get_btagging_score(ROOT::VecOps::RVec<bool> pass_loose,
+                                  ROOT::VecOps::RVec<bool> pass_medium,
+                                  ROOT::VecOps::RVec<bool> pass_tight) {
+  ROOT::VecOps::RVec<int> btagging_score;
+  btagging_score.reserve(pass_loose.size());
+
+  for (size_t i = 0; i < pass_loose.size(); ++i) {
+    int score = 0;
+    if (pass_loose[i]) {
+      score += 1;
+    }
+    if (pass_medium[i]) {
+      score += 1;
+    }
+    if (pass_tight[i]) {
+      score += 1;
+    }
+    btagging_score.push_back(score);
+  }
+  return btagging_score;
 }
 
 // return the full jets rather than the list of tags
@@ -1378,6 +1430,33 @@ AnalysisFCChh::SortParticleCollection(
     };
     std::sort(particles_in.begin(), particles_in.end(), sort_by_pT);
     return particles_in;
+  }
+}
+//
+ROOT::VecOps::RVec<int>
+AnalysisFCChh::SortParticleCollection(
+    ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> particles_in, ROOT::VecOps::RVec<int> indices) {
+
+  assert(particles_in.size() == indices.size());
+  
+  if (particles_in.size() < 2) {
+    return indices;
+  } else {
+    // create auxiliary vector with indices
+    std::vector <int> temp(indices.size());
+    std::iota(temp.begin(), temp.end(), 0);
+    // sort this auxiliary vector by pT of the particle
+    auto sort_by_pT = [&](int i, int j) {
+      return (getTLV_reco(particles_in.at(i)).Pt() > getTLV_reco(particles_in.at(j)).Pt());
+    };
+    std::sort(temp.begin(), temp.end(), sort_by_pT);
+    // refill the original index array with the sorted indices
+    std::vector <int> temp1(indices.size());
+    temp1.resize(indices.size());
+    for (size_t i = 0; i < temp.size(); i++) {
+      temp1.at(i) = indices.at(temp.at(i));
+    }
+    return temp1;
   }
 }
 // build all pairs from the input particles -> this returns the pair made of pT
@@ -1829,6 +1908,41 @@ AnalysisFCChh::get_HT_jets(ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData
   }
 
   return HT_jets;
+}
+
+float 
+AnalysisFCChh::get_topness(ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> jets) {
+      float m_min_ChiWt = -990.0;
+      // Fill in the 4 vectors of the jets
+      std::vector< TLorentzVector > temp_jets;
+
+      for (unsigned int i = 0; i < jets.size(); i++) {
+        temp_jets.push_back(getTLV_reco(jets.at(i)));
+      }
+
+      // If there are < 3 jets (min. # required to define ChiWt) fill out the rest with 0, 0, 0, 0 dummy jets
+      if (jets.size() < 3) {
+        for (unsigned int i = 0; i < 3 - jets.size(); i++) {
+          temp_jets.push_back(TLorentzVector(0, 0, 0, 0));
+        }
+      }
+
+      // Loop over all permutations of jets to calculate ChiWt
+      for (unsigned int i = 0; i < temp_jets.size(); i++) {  //i = bjet index
+        for (unsigned int j = 0; j < temp_jets.size(); j++) {  //j = ljet1 index
+          if (i == j) { continue; }     //indices must be distinct
+
+          for (unsigned int k = 0; k < temp_jets.size(); k++) {    //k = ljet2 index
+            if (i == k || k <= j) { continue; }     //indices must be distinct; require k > j since ljet1 <-> ljet2 in the definition
+
+            float ChiWt = sqrt(pow((temp_jets.at(j) + temp_jets.at(k)).M() / 80000.0 - 1, 2) + pow((temp_jets.at(i) + temp_jets.at(j) + temp_jets.at(k)).M() / 173000.0 - 1, 2));
+
+            if (ChiWt < m_min_ChiWt || m_min_ChiWt < 0) { m_min_ChiWt = ChiWt;}
+
+          }
+        }
+      }
+      return m_min_ChiWt;
 }
 
 // construct ratio of HT2 and HT_w_inv
