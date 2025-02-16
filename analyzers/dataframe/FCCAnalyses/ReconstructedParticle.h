@@ -44,8 +44,8 @@ namespace ReconstructedParticle{
   struct sel_type {
     sel_type(const int type);
     const int m_type;
-    ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData>
-    operator()(ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> in);
+    ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> operator()(ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> in);
+    ROOT::VecOps::RVec<int> operator()(ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> in, ROOT::VecOps::RVec<int> idx);
   };
 
   /// select ReconstructedParticles by type absolute value
@@ -53,8 +53,9 @@ namespace ReconstructedParticle{
   struct sel_absType {
     sel_absType(const int type);
     const int m_type;
-    ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData>
-    operator()(ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> in);
+    ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> operator()(ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> in);
+    ROOT::VecOps::RVec<int>  operator() (ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> in, ROOT::VecOps::RVec<int> idx);
+
   };
 
   /// select ReconstructedParticles with transverse momentum greater than a minimum value [GeV]
@@ -62,6 +63,7 @@ namespace ReconstructedParticle{
     sel_pt(float arg_min_pt);
     float m_min_pt = 1.; //> transverse momentum threshold [GeV]
     ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData>  operator() (ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> in);
+    ROOT::VecOps::RVec<int>  operator() (ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> in, ROOT::VecOps::RVec<int> idx);
   };
 
   /// select ReconstructedParticles with absolute pseudorapidity less than a maximum absolute value
@@ -69,6 +71,7 @@ namespace ReconstructedParticle{
     sel_eta(float arg_min_eta);
     float m_min_eta = 2.5; //> pseudorapidity threshold
     ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData>  operator() (ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> in);
+    ROOT::VecOps::RVec<int>  operator() (ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> in, ROOT::VecOps::RVec<int> idx);
   };
 
   /// select ReconstructedParticles with momentum greater than a minimum value [GeV]
@@ -77,6 +80,7 @@ namespace ReconstructedParticle{
     float m_min_p = 1.; //> momentum threshold [GeV]
     float m_max_p = 1e10; //< momentum threshold [GeV]
     ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData>  operator() (ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> in);
+    ROOT::VecOps::RVec<int>  operator() (ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> in, ROOT::VecOps::RVec<int> idx);
   };
 
   /// select ReconstructedParticles with charge equal or in asolute value
@@ -85,6 +89,7 @@ namespace ReconstructedParticle{
     float m_charge; //> charge condition
     bool  m_abs;//> absolute value of the charge
     ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData>  operator() (ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> in);
+    ROOT::VecOps::RVec<int>  operator() (ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> in, ROOT::VecOps::RVec<int> idx);
   };
 
   /// select a list of reconstructed particles depending on the angle cosTheta axis
@@ -92,6 +97,7 @@ namespace ReconstructedParticle{
     bool m_pos = 0; //> Which hemisphere to select, false/0=cosTheta<0 true/1=cosTheta>0
     sel_axis(bool arg_pos);
     ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> operator()(ROOT::VecOps::RVec<float> angle, ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> in);
+    ROOT::VecOps::RVec<int> operator() (ROOT::VecOps::RVec<float> angle, ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> in, ROOT::VecOps::RVec<int> idx);
   };
 
   /// select a list of reconstructed particles depending on the status of a certain boolean flag
@@ -99,10 +105,17 @@ namespace ReconstructedParticle{
     bool m_pass; // if pass is true, select tagged jets. Otherwise select anti-tagged ones
     sel_tag(bool arg_pass);
     ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData>  operator() (ROOT::VecOps::RVec<bool> tags, ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> in);
+    ROOT::VecOps::RVec<int>  operator() (ROOT::VecOps::RVec<bool> tags, ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> in, ROOT::VecOps::RVec<int> idx);
   };
 
   /// return reconstructed particles
   ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> get(ROOT::VecOps::RVec<int> index, ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> in);
+
+  // return other stuff
+  ROOT::VecOps::RVec<float> get(ROOT::VecOps::RVec<int> index, ROOT::VecOps::RVec<float> in);
+
+  // return the indices
+  ROOT::VecOps::RVec<int> get_idx(ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> in);
 
   /// return the transverse momenta of the input ReconstructedParticles
   ROOT::VecOps::RVec<float> get_pt(ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> in);
