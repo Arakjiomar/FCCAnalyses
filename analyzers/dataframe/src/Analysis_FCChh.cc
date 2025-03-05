@@ -1080,30 +1080,32 @@ AnalysisFCChh::get_tagged_jets_idx(
 
 ROOT::VecOps::RVec<bool>
 AnalysisFCChh::get_pass_tag(
+  ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> jets,
   ROOT::VecOps::RVec<int> jet_indices,
   ROOT::VecOps::RVec<edm4hep::ParticleIDData> jet_tags,
   ROOT::VecOps::RVec<podio::ObjectID> jet_tags_indices,
   ROOT::VecOps::RVec<float> jet_tags_values, int algoIndex) {
   
+  // a check
+  assert(jet_tags.size() == jet_tags_indices.size());
+
   // define result vector
   ROOT::VecOps::RVec<bool> pass_tag;
   pass_tag.reserve(jet_indices.size());
 
-  assert(jet_tags.size() == jet_tags_indices.size());
+  // get indices of jets passing the b-tagging algoritm
+  ROOT::VecOps::RVec<int> pass_tag_idx = get_tagged_jets_idx(jets, jet_tags, jet_tags_indices, jet_tags_values, algoIndex);
 
-  // loop over the jet indices (from the main jet collection)
+  // loop over the jet tag indices (from the main jet collection)
   for (size_t i = 0; i < jet_indices.size(); ++i) {
-
-    // get the index of the jet in the original collection
-    // corresponding to the index in the jet tags collection
-    const auto jet_tags_i = jet_indices[i];
-    const auto tag = static_cast<unsigned>(
-        jet_tags_values[jet_tags[jet_tags_i].parameters_begin]);
-
-    if (tag & (1 << algoIndex)) {
+    // check if the current index is in the array of the indices of the jets
+    // passing b-tagging requirement
+    int current_idx = jet_indices[i];
+    int * check = std::find(std::begin(pass_tag_idx), std::end(pass_tag_idx), current_idx);
+    // When the element is not found, std::find returns the end of the range
+    if (check != std::end(pass_tag_idx)) {
       pass_tag.push_back(true);
-    }
-    else {
+    } else {
       pass_tag.push_back(false);
     }
   }
@@ -1123,14 +1125,14 @@ AnalysisFCChh::get_btagging_score(ROOT::VecOps::RVec<bool> pass_loose,
 
   for (size_t i = 0; i < pass_loose.size(); ++i) {
     int score = 0;
-    if (pass_loose[i]) {
-      score += 1;
+    if (pass_loose[i]==1) {
+      score = 1;
     }
-    if (pass_medium[i]) {
-      score += 1;
+    if (pass_medium[i]==1) {
+      score = 2;
     }
-    if (pass_tight[i]) {
-      score += 1;
+    if (pass_tight[i]==1) {
+      score = 3;
     }
     btagging_score.push_back(score);
   }

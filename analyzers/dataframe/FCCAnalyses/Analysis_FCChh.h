@@ -240,7 +240,8 @@ get_untagged_jets(ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> jets,
                   ROOT::VecOps::RVec<edm4hep::ParticleIDData> pid,
                   ROOT::VecOps::RVec<float> values, int algoIndex);
 ROOT::VecOps::RVec<bool>
-get_pass_tag(ROOT::VecOps::RVec<int> jet_indices,
+get_pass_tag(ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> jets,
+                ROOT::VecOps::RVec<int> jet_indices,
                 ROOT::VecOps::RVec<edm4hep::ParticleIDData> jet_tags,
                 ROOT::VecOps::RVec<podio::ObjectID> jet_tags_indices,
                 ROOT::VecOps::RVec<float> jet_tags_values, int algoIndex);
