@@ -324,6 +324,56 @@ bool AnalysisFCChh::hasHiggsParent(
   return false;
 }
 
+ROOT::VecOps::RVec<bool> hasHiggsParent(
+  ROOT::VecOps::RVec<edm4hep::MCParticleData> truth_part,
+  ROOT::VecOps::RVec<podio::ObjectID> parent_ids,
+  ROOT::VecOps::RVec<edm4hep::MCParticleData> truth_particles) {
+    ROOT::VecOps::RVec<bool> hasHiggs;
+    for (int i = 0; i < truth_part.size(); i++) {
+        hasHiggs.push_back(hasHiggsParent(truth_part.at(i), parent_ids, truth_particles));
+    }
+    return hasHiggs;
+  }
+
+bool AnalysisFCChh::hasTopParent(
+  edm4hep::MCParticleData truth_part,
+  ROOT::VecOps::RVec<podio::ObjectID> parent_ids,
+  ROOT::VecOps::RVec<edm4hep::MCParticleData> truth_particles) {
+
+  // copy function from hasHiggsParent, but with top instead of Higgs
+  auto first_parent_index = truth_part.parents_begin;
+  auto last_parent_index = truth_part.parents_end;
+
+  // loop over all parents
+  for (int parent_i = first_parent_index; parent_i < last_parent_index;
+       parent_i++) {
+    // first get the index from the parent
+    auto parent_MC_index = parent_ids.at(parent_i).index;
+
+    // then go back to the original vector of MCParticles
+    auto parent = truth_particles.at(parent_MC_index);
+
+    if (isTop(parent)) {
+      return true;
+    }
+    return hasTopParent(parent, parent_ids, truth_particles);
+  }
+
+  return false;
+
+}
+
+ROOT::VecOps::RVec<bool> hasTopParent(
+  ROOT::VecOps::RVec<edm4hep::MCParticleData> truth_part,
+  ROOT::VecOps::RVec<podio::ObjectID> parent_ids,
+  ROOT::VecOps::RVec<edm4hep::MCParticleData> truth_particles) {
+    ROOT::VecOps::RVec<bool> hasTop;
+    for (int i = 0; i < truth_part.size(); i++) {
+      hasTop.push_back(hasTopParent(truth_part.at(i), parent_ids, truth_particles));
+    }
+    return hasTop;
+  }
+
 // check if the immediate parent of a particle is a Higgs
 bool AnalysisFCChh::isFromHiggsDirect(
     edm4hep::MCParticleData truth_part,
@@ -2601,6 +2651,39 @@ AnalysisFCChh::get_immediate_children(
   return child_list;
 }
 
+bool AnalysisFCChh::hasChild(edm4hep::MCParticleData truth_part, ROOT::VecOps::RVec<edm4hep::MCParticleData> truth_particles, ROOT::VecOps::RVec<podio::ObjectID> daughter_ids, int pdgid) {
+  // check daughter particles
+  ROOT::VecOps::RVec<edm4hep::MCParticleData> daughters =
+  get_immediate_children(truth_part, truth_particles, daughter_ids);
+  // check if any of the daughters are of the required PDG ID
+  for (auto &daughter : daughters) {
+    if (daughter.PDG == pdgid) {
+      return true;
+    }
+  }
+  return false;
+}
+
+// function which finds truth higgs in the MC particles
+ROOT::VecOps::RVec<edm4hep::MCParticleData> AnalysisFCChh::get_final_Higgs(
+  ROOT::VecOps::RVec<edm4hep::MCParticleData> truth_particles,
+  ROOT::VecOps::RVec<podio::ObjectID> daughter_ids) {
+  ROOT::VecOps::RVec<edm4hep::MCParticleData> higgs_list;
+  // loop over all particles
+  for (auto &truth_part : truth_particles) {
+    // check if particle is a Higgs
+    if (isH(truth_part)) {
+      // check if daughters are Higgs bosons
+      // if so it means that the Higgs is not the final Higgs boson and we skip it
+      bool is_final_higgs = !(hasChild(truth_part, truth_particles, daughter_ids, 25));
+      // if none of the daughters are Higgs bosons, we add the Higgs to the list
+      if (is_final_higgs) { 
+        higgs_list.push_back(truth_part);
+      }
+    } 
+  }
+  return higgs_list;
+}
 // function which finds truth higgs in the MC particles and selects the one that
 // decays according to requested type (to ZZ or bb here)
 ROOT::VecOps::RVec<edm4hep::MCParticleData> AnalysisFCChh::get_truth_Higgs(
@@ -2707,6 +2790,41 @@ ROOT::VecOps::RVec<edm4hep::MCParticleData> AnalysisFCChh::get_truth_Z_decay(
 
   return Z_list;
 }
+
+// function which finds truth higgs in the MC particles
+ROOT::VecOps::RVec<edm4hep::MCParticleData> AnalysisFCChh::get_final_top(
+  ROOT::VecOps::RVec<edm4hep::MCParticleData> truth_particles,
+  ROOT::VecOps::RVec<podio::ObjectID> daughter_ids) {
+  ROOT::VecOps::RVec<edm4hep::MCParticleData> top_list;
+  // loop over all particles
+  for (auto &truth_part : truth_particles) {
+    // check if particle is a top quark
+    if (isTop(truth_part)) {
+      // check if daughters are tops
+      // if so it means that the top is not the final top and we skip it
+      bool is_final_top = !((hasChild(truth_part, truth_particles, daughter_ids, 6)) || (hasChild(truth_part, truth_particles, daughter_ids, -6)));
+      // if none of the daughters are tops, we add this top to the list
+      if (is_final_top) { 
+        top_list.push_back(truth_part);
+      }
+    } 
+  }
+  return top_list;
+}
+
+ROOT::VecOps::RVec<edm4hep::MCParticleData> AnalysisFCChh::get_final_photons(
+  ROOT::VecOps::RVec<edm4hep::MCParticleData> truth_particles) {
+  ROOT::VecOps::RVec<edm4hep::MCParticleData> photon_list;
+  // loop over all particles
+  for (auto &truth_part : truth_particles) {
+    // check if particle is a photon
+    if (isStablePhoton(truth_part)) {
+      photon_list.push_back(truth_part);
+    } 
+  }
+  return photon_list;
+}
+
 
 // get the truth flavour of the leptons from taus
 ROOT::VecOps::RVec<int> AnalysisFCChh::getTruthLepLepFlavour(
@@ -3082,6 +3200,25 @@ ROOT::VecOps::RVec<edm4hep::MCParticleData> AnalysisFCChh::getPhotonsFromH(
   }
   // std::cout << "Leps from tau-higgs " << counter << std::endl;
   return gamma_list;
+}
+
+// find b-jets that came from a top->Wb decay
+ROOT::VecOps::RVec<edm4hep::MCParticleData> AnalysisFCChh::getBJetsFromTop(
+  ROOT::VecOps::RVec<edm4hep::MCParticleData> truth_particles,
+  ROOT::VecOps::RVec<podio::ObjectID> parent_ids) {
+ROOT::VecOps::RVec<edm4hep::MCParticleData> b_list;
+
+// loop over all truth particles and find bottom quarks that do not come
+// (directly) from a hadron decay
+for (auto &truth_part : truth_particles) {
+  if (isb(truth_part)) {
+    bool from_top = hasTopParent(truth_part, parent_ids, truth_particles);
+    if (from_top) {
+      b_list.push_back(truth_part);
+    }
+  }
+}
+return b_list;
 }
 
 // find W bosons that came directly out of the H->WW decay

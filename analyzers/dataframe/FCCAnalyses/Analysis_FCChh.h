@@ -385,7 +385,12 @@ ROOT::VecOps::RVec<edm4hep::MCParticleData> get_immediate_children(
     edm4hep::MCParticleData truth_part,
     ROOT::VecOps::RVec<edm4hep::MCParticleData> truth_particles,
     ROOT::VecOps::RVec<podio::ObjectID> daughter_ids);
-
+// check PDG ID of children
+bool hasChild(edm4hep::MCParticleData truth_part, ROOT::VecOps::RVec<edm4hep::MCParticleData> truth_particles, ROOT::VecOps::RVec<podio::ObjectID> daughter_ids, int pdgid);
+// select the truth Higgs
+ROOT::VecOps::RVec<edm4hep::MCParticleData>
+get_final_Higgs(ROOT::VecOps::RVec<edm4hep::MCParticleData> truth_particles,
+                ROOT::VecOps::RVec<podio::ObjectID> daughter_ids);
 // select the truth Higgs, depending on which particles it decays to:
 ROOT::VecOps::RVec<edm4hep::MCParticleData>
 get_truth_Higgs(ROOT::VecOps::RVec<edm4hep::MCParticleData> truth_particles,
@@ -395,12 +400,24 @@ ROOT::VecOps::RVec<edm4hep::MCParticleData>
 get_truth_Z_decay(ROOT::VecOps::RVec<edm4hep::MCParticleData> truth_particles,
                   ROOT::VecOps::RVec<podio::ObjectID> daughter_ids,
                   TString decay = "ZZ");
-
+ROOT::VecOps::RVec<edm4hep::MCParticleData>
+get_final_top(ROOT::VecOps::RVec<edm4hep::MCParticleData> truth_particles,
+                ROOT::VecOps::RVec<podio::ObjectID> daughter_ids);
+ROOT::VecOps::RVec<edm4hep::MCParticleData>
+get_final_photons(ROOT::VecOps::RVec<edm4hep::MCParticleData> truth_particles);
 // Filters and specifics for the bbtautau analysis:
 bool isFromHadron(edm4hep::MCParticleData truth_part,
                   ROOT::VecOps::RVec<podio::ObjectID> parent_ids,
                   ROOT::VecOps::RVec<edm4hep::MCParticleData> truth_particles);
+ROOT::VecOps::RVec<bool> hasHiggsParent(
+  ROOT::VecOps::RVec<edm4hep::MCParticleData> truth_part,
+  ROOT::VecOps::RVec<podio::ObjectID> parent_ids,
+  ROOT::VecOps::RVec<edm4hep::MCParticleData> truth_particles);
 bool hasHiggsParent(
+    edm4hep::MCParticleData truth_part,
+    ROOT::VecOps::RVec<podio::ObjectID> parent_ids,
+    ROOT::VecOps::RVec<edm4hep::MCParticleData> truth_particles);
+bool hasTopParent(
     edm4hep::MCParticleData truth_part,
     ROOT::VecOps::RVec<podio::ObjectID> parent_ids,
     ROOT::VecOps::RVec<edm4hep::MCParticleData> truth_particles);
@@ -431,6 +448,9 @@ getLepsFromZ(ROOT::VecOps::RVec<edm4hep::MCParticleData> truth_particles,
              ROOT::VecOps::RVec<podio::ObjectID> parent_ids);
 ROOT::VecOps::RVec<edm4hep::MCParticleData>
 getPhotonsFromH(ROOT::VecOps::RVec<edm4hep::MCParticleData> truth_particles,
+                ROOT::VecOps::RVec<podio::ObjectID> parent_ids);
+ROOT::VecOps::RVec<edm4hep::MCParticleData>
+getBJetsFromTop(ROOT::VecOps::RVec<edm4hep::MCParticleData> truth_particles,
                 ROOT::VecOps::RVec<podio::ObjectID> parent_ids);
 ROOT::VecOps::RVec<edm4hep::MCParticleData>
 getWFromH(ROOT::VecOps::RVec<edm4hep::MCParticleData> truth_particles,
@@ -547,6 +567,12 @@ ROOT::VecOps::RVec<T> get(const ROOT::VecOps::RVec<int> &index,
       result.push_back(in[index[i]]);
   }
   return result;
+}
+
+template <typename t>
+ROOT::VecOps::RVec<t> concatenate(const ROOT::VecOps::RVec<t> &v1,
+                                  const ROOT::VecOps::RVec<t> &v2) {
+    return ROOT::VecOps::Concatenate(v1, v2);
 }
 
 } // namespace AnalysisFCChh
