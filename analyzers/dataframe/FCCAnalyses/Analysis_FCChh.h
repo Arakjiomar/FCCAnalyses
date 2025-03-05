@@ -15,6 +15,8 @@
 
 #include <iostream>
 
+#include "ReconstructedParticle2MC.h"
+
 namespace AnalysisFCChh {
 
 /// TESTER: return the transverse momenta of the input ReconstructedParticles
@@ -145,7 +147,27 @@ int findTopDecayChannel(
 int findHiggsDecayChannel(
     ROOT::VecOps::RVec<edm4hep::MCParticleData> truth_particles,
     ROOT::VecOps::RVec<podio::ObjectID> daughter_ids);
-
+ROOT::VecOps::RVec<bool> IsRecoPhotonFromHiggs(
+        ROOT::VecOps::RVec<int> all_reco_idx,
+        ROOT::VecOps::RVec<int> all_mc_idx,
+        ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> all_reco_particles,
+        ROOT::VecOps::RVec<edm4hep::MCParticleData> all_mc_particles,
+        ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> photons,
+        ROOT::VecOps::RVec<int> photons_idx);
+ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> GetRecoPhotonsFromHiggs(
+    ROOT::VecOps::RVec<int> all_reco_idx,
+    ROOT::VecOps::RVec<int> all_mc_idx,
+    ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> all_reco_particles,
+    ROOT::VecOps::RVec<edm4hep::MCParticleData> all_mc_particles,
+    ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> photons,
+    ROOT::VecOps::RVec<int> photons_idx);
+ROOT::VecOps::RVec<int> GetRecoPhotonIndicesFromHiggs(
+    ROOT::VecOps::RVec<int> all_reco_idx,
+    ROOT::VecOps::RVec<int> all_mc_idx,
+    ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> all_reco_particles,
+    ROOT::VecOps::RVec<edm4hep::MCParticleData> all_mc_particles,
+    ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> photons,
+    ROOT::VecOps::RVec<int> photons_idx);
 // truth level fct to get a Z->ll truth decay
 ROOT::VecOps::RVec<edm4hep::MCParticleData>
 getTruthZll(ROOT::VecOps::RVec<edm4hep::MCParticleData> truth_particles,

@@ -16,6 +16,93 @@ bool AnalysisFCChh::isStablePhoton(edm4hep::MCParticleData truth_part) {
   }
 }
 
+ROOT::VecOps::RVec<bool> AnalysisFCChh::IsRecoPhotonFromHiggs(
+  ROOT::VecOps::RVec<int> all_reco_idx,
+	ROOT::VecOps::RVec<int> all_mc_idx,
+  ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> all_reco_particles,
+  ROOT::VecOps::RVec<edm4hep::MCParticleData> all_mc_particles,
+  ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> photons,
+  ROOT::VecOps::RVec<int> photons_idx) {
+    
+  // get truth particles indices associated with reco particles
+  ROOT::VecOps::RVec<int> index = FCCAnalyses::ReconstructedParticle2MC::getRP2MC_index(all_reco_idx, all_mc_idx, all_reco_particles);
+  // loop over the reco photon pairs
+  float mH = 125.;
+  float best = 999999.;
+  int ph1_idx = -1;
+  int ph2_idx = -1;
+  for (int i = 0; i < photons.size(); i++) {
+    for (int j=i+1; j < photons.size(); j++) {
+      // get the index of the truth particle associated with the reco photon
+      int mc_idx_1 = index[photons_idx[i]];
+      int mc_idx_2 = index[photons_idx[j]];
+      // check if the truth particle is a stable photon
+      if (isStablePhoton(all_mc_particles[mc_idx_1]) && isStablePhoton(all_mc_particles[mc_idx_2])) {
+        // in this case calculate myy truth
+        ROOT::Math::PtEtaPhiMVector photon1(photons[i].momentum.x, photons[i].momentum.y, photons[i].momentum.z, photons[i].mass);
+        ROOT::Math::PtEtaPhiMVector photon2(photons[j].momentum.x, photons[j].momentum.y, photons[j].momentum.z, photons[j].mass);
+        ROOT::Math::PtEtaPhiMVector diphoton = photon1 + photon2;
+        if (abs(diphoton.M() - mH)<best) {
+          best = abs(diphoton.M() - mH);
+          ph1_idx = i;
+          ph2_idx = j;
+        } 
+      }
+    }
+  }
+
+  ROOT::VecOps::RVec<bool> is_from_Higgs;
+  for (int i = 0; i < photons.size(); i++) {
+    if (i == ph1_idx || i == ph2_idx) {
+      is_from_Higgs.push_back(true);
+    } else {
+      is_from_Higgs.push_back(false);
+    }
+  }
+
+  return is_from_Higgs;
+}
+
+ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> AnalysisFCChh::GetRecoPhotonsFromHiggs(
+  ROOT::VecOps::RVec<int> all_reco_idx,
+  ROOT::VecOps::RVec<int> all_mc_idx,
+  ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> all_reco_particles,
+  ROOT::VecOps::RVec<edm4hep::MCParticleData> all_mc_particles,
+  ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> photons,
+  ROOT::VecOps::RVec<int> photons_idx) {
+    
+  // get truth particles indices associated with reco particles
+  ROOT::VecOps::RVec<bool> is_from_higgs = AnalysisFCChh::IsRecoPhotonFromHiggs(all_reco_idx, all_mc_idx, all_reco_particles, all_mc_particles, photons, photons_idx);
+  ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> photons_from_higgs;
+  for (int i = 0; i < photons.size(); i++) {
+    if (is_from_higgs[i]) {
+      photons_from_higgs.push_back(photons[i]);
+    }
+  }
+
+  return photons_from_higgs;
+}
+
+ROOT::VecOps::RVec<int> AnalysisFCChh::GetRecoPhotonIndicesFromHiggs(
+  ROOT::VecOps::RVec<int> all_reco_idx,
+  ROOT::VecOps::RVec<int> all_mc_idx,
+  ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> all_reco_particles,
+  ROOT::VecOps::RVec<edm4hep::MCParticleData> all_mc_particles,
+  ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> photons,
+  ROOT::VecOps::RVec<int> photons_idx) {
+    
+  // get array of photons from Higgs
+  ROOT::VecOps::RVec<bool> is_from_higgs = AnalysisFCChh::IsRecoPhotonFromHiggs(all_reco_idx, all_mc_idx, all_reco_particles, all_mc_particles, photons, photons_idx);
+  ROOT::VecOps::RVec<int> photons_from_higgs_idx;
+  for (int i = 0; i < photons.size(); i++) {
+    if (is_from_higgs[i]) {
+      photons_from_higgs_idx.push_back(photons_idx[i]);
+    }
+  }
+
+  return photons_from_higgs_idx;
+}
+
 bool AnalysisFCChh::isPhoton(edm4hep::MCParticleData truth_part) {
   auto pdg_id = truth_part.PDG;
   // std::cout << "pdg id of truth part is" << pdg_id << std::endl;

@@ -428,7 +428,6 @@ ROOT::VecOps::RVec<float> get(ROOT::VecOps::RVec<int> index, ROOT::VecOps::RVec<
 }
 
 
-
 TLorentzVector get_P4vis(ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> in) {
     TLorentzVector P4sum;
     for (auto & p: in) {
