@@ -147,6 +147,10 @@ int findTopDecayChannel(
 int findHiggsDecayChannel(
     ROOT::VecOps::RVec<edm4hep::MCParticleData> truth_particles,
     ROOT::VecOps::RVec<podio::ObjectID> daughter_ids);
+// find reco photons from Higgs
+// using their truth-matched particles and true myy
+// only works if we can compute true myy, i.e. if we can reconstruct 
+// both reco photons from the Higgs, and find their truth matched particles
 ROOT::VecOps::RVec<bool> IsRecoPhotonFromHiggs(
         ROOT::VecOps::RVec<int> all_reco_idx,
         ROOT::VecOps::RVec<int> all_mc_idx,
