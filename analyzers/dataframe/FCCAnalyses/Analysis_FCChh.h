@@ -207,7 +207,8 @@ ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> SortParticleCollection(
     ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> particles_in);
 ROOT::VecOps::RVec<int> SortParticleCollection(
         ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> particles_in, ROOT::VecOps::RVec<int> indices);
-
+ROOT::VecOps::RVec<edm4hep::MCParticleData> SortParticleCollection(
+    ROOT::VecOps::RVec<edm4hep::MCParticleData> particles_in);
 // btags
 ROOT::VecOps::RVec<bool>
 getJet_tag(ROOT::VecOps::RVec<int> index,

@@ -1519,6 +1519,22 @@ AnalysisFCChh::SortParticleCollection(
     return particles_in;
   }
 }
+
+ROOT::VecOps::RVec<edm4hep::MCParticleData>
+AnalysisFCChh::SortParticleCollection(
+    ROOT::VecOps::RVec<edm4hep::MCParticleData> particles_in) {
+  if (particles_in.size() < 2) {
+    return particles_in;
+  } else {
+    auto sort_by_pT = [&](edm4hep::MCParticleData part_i,
+                          edm4hep::MCParticleData part_j) {
+      return (getTLV_MC(part_i).Pt() > getTLV_MC(part_j).Pt());
+    };
+    std::sort(particles_in.begin(), particles_in.end(), sort_by_pT);
+    return particles_in;
+  }
+}
+
 //
 ROOT::VecOps::RVec<int>
 AnalysisFCChh::SortParticleCollection(
