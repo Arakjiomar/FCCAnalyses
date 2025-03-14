@@ -8,14 +8,18 @@ outputDir  = os.environ.get('ttH_yy_DIR') + '/final/'
 
 processList = {
     #Signal
-    'mgp8_pp_tth01j_5f_haa':{}, #output file from analysis_stage1.py
+    #'mgp8_pp_tth01j_5f_haa':{}, #output file from analysis_stage1.py
+    'mgp8_pp_tth01j_5f_84TeV_haaexcl':{}, #output file from analysis_stage1.py
     #Backgrounds
-    'mgp8_pp_jjaa_5f':{}, #output file from analysis_stage1.py
-    'mgp8_pp_ttaa_semilep_5f_100TeV':{} #output file from analysis_stage1.py
+    #'mgp8_pp_ttaa_semilep_5f_100TeV':{} #output file from analysis_stage1.py
+    #'mgp8_pp_Vaajj_HF_5f_84TeV' : {}, #output file from analysis_stage1.py
+    #'mgp8_pp_ttaa01j_5f_84TeV':{}, #output file from analysis_stage1.py
+    #'pwp8_pp_hh_lambda100_5f_hhbbaa' : {}, #output file from analysis_stage1.py
+
 }
 
 #Link to the dictionary that contains all the cross section informations etc...
-procDict = "/eos/experiment/fcc/hh/utils/FCCDicts/FCChh_procDict_fcc_v06_II.json"
+procDict = "/eos/experiment/fcc/hh/utils/FCCDicts/FCChh_procDict_fcc_v07_II.json"
 #Note the numbeOfEvents and sumOfWeights are placeholders that get overwritten with the correct values in the samples
 
 #How to add a process that is not in the official dictionary:
@@ -28,7 +32,7 @@ intLumi = 30e+06  # pb-1
 doScale = True
 
 #Number of CPUs to use
-nCPUS = 2
+nCPUS = 8
 
 #produces ROOT TTrees, default is False
 doTree = True
@@ -40,20 +44,59 @@ do_weighted = True
 
 # Dictionary of the list of cuts. The key is the name of the selection that will be added to the output file
 cutList = {
-            "nocuts":"n_photons >= 0", # all events
-            "photons":"n_photons > 1 && pT_y1 > 25. && pT_y2 > 25.",
-            "photons_rel_pt": "n_photons > 1 && pT_y1 > 25. && pT_y2 > 25. && rel_pT_y1 > 0.35 && rel_pT_y2 > 0.25",
-            "photons_myy_window": "n_photons > 1 && pT_y1 > 25. && pT_y2 > 25. && rel_pT_y1 > 0.35 && rel_pT_y2 > 0.25 & m_yy[0] > 105. && m_yy[0] <= 160.",
-            "preselection": "n_photons > 1 && pT_y1 > 25. && pT_y2 > 25. && rel_pT_y1 > 0.35 && rel_pT_y2 > 0.25 & m_yy[0] > 105. && m_yy[0] <= 160. && n_bjets > 1",
-            "preselection_myy_window_narrow": "n_photons > 1 && pT_y1 > 25. && pT_y2 > 25. && rel_pT_y1 > 0.35 && rel_pT_y2 > 0.25 & m_yy[0] > 120. && m_yy[0] <= 130. && n_bjets > 1",
-            "bjets": "n_bjets > 1",
-            "photons_and_bjets": "n_photons > 1 && n_bjets > 1 && pT_y1 > 25. && pT_y2 > 25.",
-            "had_channel": "n_photons > 1 && pT_y1 > 25. && pT_y2 > 25. && rel_pT_y1 > 0.35 && rel_pT_y2 > 0.25 & m_yy[0] > 105. && m_yy[0] <= 160. && n_bjets > 1 && n_electrons==0 && n_muons == 0 && n_jets > 3",
-            "lep_channel": "n_photons > 1 && pT_y1 > 25. && pT_y2 > 25. && rel_pT_y1 > 0.35 && rel_pT_y2 > 0.25 & m_yy[0] > 105. && m_yy[0] <= 160. && n_bjets > 1 && (n_electrons > 0 || n_muons > 0)",
-            "dilep_channel": "n_photons > 1 && pT_y1 > 25. && pT_y2 > 25. && rel_pT_y1 > 0.35 && rel_pT_y2 > 0.25 & m_yy[0] > 105. && m_yy[0] <= 160. && n_bjets > 1 && (n_electrons > 1 || n_muons > 1 || (n_electrons > 0 && n_muons > 0))",
-            "ee_channel" : "n_photons > 1 && pT_y1 > 25. && pT_y2 > 25. && rel_pT_y1 > 0.35 && rel_pT_y2 > 0.25 & m_yy[0] > 105. && m_yy[0] <= 160. && n_bjets > 1 && n_electrons > 1",
-            "mumu_channel" : "n_photons > 1 && pT_y1 > 25. && pT_y2 > 25. && rel_pT_y1 > 0.35 && rel_pT_y2 > 0.25 & m_yy[0] > 105. && m_yy[0] <= 160. && n_bjets > 1 && n_muons > 1",
-            "emu_channel" : "n_photons > 1 && pT_y1 > 25. && pT_y2 > 25. & rel_pT_y1 > 0.35 && rel_pT_y2 > 0.25 & m_yy[0] > 105. && m_yy[0] <= 160. && n_bjets > 1 && n_electrons > 0 && n_muons > 0",
+            # cutflow
+            "nocuts":                       "n_photons >= 0", # all events
+            "photons":                      "n_photons > 1 && pT_y1 > 25. && pT_y2 > 25. ", # 2 photons with pT > 25 GeV
+            "photons_rel_pt":               "n_photons > 1 && pT_y1 > 25. && pT_y2 > 25. && rel_pT_y1 > 0.35 && rel_pT_y2 > 0.25",
+            "photons_myy_window_wide":      "n_photons > 1 && pT_y1 > 25. && pT_y2 > 25. && rel_pT_y1 > 0.35 && rel_pT_y2 > 0.25 && m_yy[0] > 105. && m_yy[0] <= 160.",
+            "photons_myy_window":           "n_photons > 1 && pT_y1 > 25. && pT_y2 > 25. && rel_pT_y1 > 0.35 && rel_pT_y2 > 0.25 && m_yy[0] > 110. && m_yy[0] <= 140.",
+            "preselection_wide":            "n_photons > 1 && pT_y1 > 25. && pT_y2 > 25. && rel_pT_y1 > 0.35 && rel_pT_y2 > 0.25 && m_yy[0] > 105. && m_yy[0] <= 160. && n_bjets > 1",
+            "preselection":                 "n_photons > 1 && pT_y1 > 25. && pT_y2 > 25. && rel_pT_y1 > 0.35 && rel_pT_y2 > 0.25 && m_yy[0] > 110. && m_yy[0] <= 140. && n_bjets > 1",
+            "lep_channel_wide":             "n_photons > 1 && pT_y1 > 25. && pT_y2 > 25. && rel_pT_y1 > 0.35 && rel_pT_y2 > 0.25 && m_yy[0] > 105. && m_yy[0] <= 160. && n_bjets > 1 && (n_electrons > 0 || n_muons > 0)",
+            "lep_channel":                  "n_photons > 1 && pT_y1 > 25. && pT_y2 > 25. && rel_pT_y1 > 0.35 && rel_pT_y2 > 0.25 && m_yy[0] > 110. && m_yy[0] <= 140. && n_bjets > 1 && (n_electrons > 0 || n_muons > 0)",
+            # pT(yy) bins
+            "pT_yy_bin1": "pT_yy[0] >= 0. && pT_yy[0] < 60.     && n_photons > 1 && pT_y1 > 25. && pT_y2 > 25. && rel_pT_y1 > 0.35 && rel_pT_y2 > 0.25 & m_yy[0] > 110. && m_yy[0] <= 140. && n_bjets > 1 && (n_electrons > 0 || n_muons > 0)",
+            "pT_yy_bin2": "pT_yy[0] >= 60. && pT_yy[0] < 120.   && n_photons > 1 && pT_y1 > 25. && pT_y2 > 25. && rel_pT_y1 > 0.35 && rel_pT_y2 > 0.25 & m_yy[0] > 110. && m_yy[0] <= 140. && n_bjets > 1 && (n_electrons > 0 || n_muons > 0)",
+            "pT_yy_bin3": "pT_yy[0] >= 120. && pT_yy[0] < 200.  && n_photons > 1 && pT_y1 > 25. && pT_y2 > 25. && rel_pT_y1 > 0.35 && rel_pT_y2 > 0.25 & m_yy[0] > 110. && m_yy[0] <= 140. && n_bjets > 1 && (n_electrons > 0 || n_muons > 0)",
+            "pT_yy_bin4": "pT_yy[0] >= 200. && pT_yy[0] < 300.  && n_photons > 1 && pT_y1 > 25. && pT_y2 > 25. && rel_pT_y1 > 0.35 && rel_pT_y2 > 0.25 & m_yy[0] > 110. && m_yy[0] <= 140. && n_bjets > 1 && (n_electrons > 0 || n_muons > 0)",
+            "pT_yy_bin5": "pT_yy[0] >= 300.                     && n_photons > 1 && pT_y1 > 25. && pT_y2 > 25. && rel_pT_y1 > 0.35 && rel_pT_y2 > 0.25 & m_yy[0] > 110. && m_yy[0] <= 140. && n_bjets > 1 && (n_electrons > 0 || n_muons > 0)",
+            # truth bins for the signal
+            # pT(H) < 60 GeV
+            "TTH_CEN_PTH_0_60_pT_yy_bin1"    : "(abs(rapidity_higgs[0])<6.0 && pT_higgs[0]>=0 && pT_higgs[0]<60)  && (pT_yy[0] >= 0. && pT_yy[0] < 60.)    && n_photons > 1 && pT_y1 > 25. && pT_y2 > 25. && rel_pT_y1 > 0.35 && rel_pT_y2 > 0.25 & m_yy[0] >= 110. && m_yy[0] <= 140. && n_bjets > 1 && (n_electrons > 0 || n_muons > 0)",
+            "TTH_CEN_PTH_0_60_pT_yy_bin2"    : "(abs(rapidity_higgs[0])<6.0 && pT_higgs[0]>=0 && pT_higgs[0]<60)  && (pT_yy[0] >= 60. && pT_yy[0] < 120.)  && n_photons > 1 && pT_y1 > 25. && pT_y2 > 25. && rel_pT_y1 > 0.35 && rel_pT_y2 > 0.25 & m_yy[0] >= 110. && m_yy[0] <= 140. && n_bjets > 1 && (n_electrons > 0 || n_muons > 0)",
+            "TTH_CEN_PTH_0_60_pT_yy_bin3"    : "(abs(rapidity_higgs[0])<6.0 && pT_higgs[0]>=0 && pT_higgs[0]<60)  && (pT_yy[0] >= 120. && pT_yy[0] < 200.) && n_photons > 1 && pT_y1 > 25. && pT_y2 > 25. && rel_pT_y1 > 0.35 && rel_pT_y2 > 0.25 & m_yy[0] >= 110. && m_yy[0] <= 140. && n_bjets > 1 && (n_electrons > 0 || n_muons > 0)",
+            "TTH_CEN_PTH_0_60_pT_yy_bin4"    : "(abs(rapidity_higgs[0])<6.0 && pT_higgs[0]>=0 && pT_higgs[0]<60)  && (pT_yy[0] >= 200. && pT_yy[0] < 300.) && n_photons > 1 && pT_y1 > 25. && pT_y2 > 25. && rel_pT_y1 > 0.35 && rel_pT_y2 > 0.25 & m_yy[0] >= 110. && m_yy[0] <= 140. && n_bjets > 1 && (n_electrons > 0 || n_muons > 0)",
+            "TTH_CEN_PTH_0_60_pT_yy_bin5"    : "(abs(rapidity_higgs[0])<6.0 && pT_higgs[0]>=0 && pT_higgs[0]<60)  && (pT_yy[0] >= 300.)                    && n_photons > 1 && pT_y1 > 25. && pT_y2 > 25. && rel_pT_y1 > 0.35 && rel_pT_y2 > 0.25 & m_yy[0] >= 110. && m_yy[0] <= 140. && n_bjets > 1 && (n_electrons > 0 || n_muons > 0)",
+            # 60 < pT(H) < 120 GeV
+            "TTH_CEN_PTH_60_120_pT_yy_bin1"  : "(abs(rapidity_higgs[0])<6.0 &&  pT_higgs[0]>=60 && pT_higgs[0]<120) && (pT_yy[0] >= 0. && pT_yy[0] < 60.)    && n_photons > 1 && pT_y1 > 25. && pT_y2 > 25. && rel_pT_y1 > 0.35 && rel_pT_y2 > 0.25 & m_yy[0] >= 110. && m_yy[0] <= 140. && n_bjets > 1 && (n_electrons > 0 || n_muons > 0)",
+            "TTH_CEN_PTH_60_120_pT_yy_bin2"  : "(abs(rapidity_higgs[0])<6.0 &&  pT_higgs[0]>=60 && pT_higgs[0]<120) && (pT_yy[0] >= 60. && pT_yy[0] < 120.)  && n_photons > 1 && pT_y1 > 25. && pT_y2 > 25. && rel_pT_y1 > 0.35 && rel_pT_y2 > 0.25 & m_yy[0] >= 110. && m_yy[0] <= 140. && n_bjets > 1 && (n_electrons > 0 || n_muons > 0)",
+            "TTH_CEN_PTH_60_120_pT_yy_bin3"  : "(abs(rapidity_higgs[0])<6.0 &&  pT_higgs[0]>=60 && pT_higgs[0]<120) && (pT_yy[0] >= 120. && pT_yy[0] < 200.) && n_photons > 1 && pT_y1 > 25. && pT_y2 > 25. && rel_pT_y1 > 0.35 && rel_pT_y2 > 0.25 & m_yy[0] >= 110. && m_yy[0] <= 140. && n_bjets > 1 && (n_electrons > 0 || n_muons > 0)",
+            "TTH_CEN_PTH_60_120_pT_yy_bin4"  : "(abs(rapidity_higgs[0])<6.0 &&  pT_higgs[0]>=60 && pT_higgs[0]<120) && (pT_yy[0] >= 200. && pT_yy[0] < 300.) && n_photons > 1 && pT_y1 > 25. && pT_y2 > 25. && rel_pT_y1 > 0.35 && rel_pT_y2 > 0.25 & m_yy[0] >= 110. && m_yy[0] <= 140. && n_bjets > 1 && (n_electrons > 0 || n_muons > 0)",
+            "TTH_CEN_PTH_60_120_pT_yy_bin5"  : "(abs(rapidity_higgs[0])<6.0 &&  pT_higgs[0]>=60 && pT_higgs[0]<120) && (pT_yy[0] >= 300.)                    && n_photons > 1 && pT_y1 > 25. && pT_y2 > 25. && rel_pT_y1 > 0.35 && rel_pT_y2 > 0.25 & m_yy[0] >= 110. && m_yy[0] <= 140. && n_bjets > 1 && (n_electrons > 0 || n_muons > 0)",
+            # 120 < pT(H) < 200 GeV
+            "TTH_CEN_PTH_120_200_pT_yy_bin1" : "(abs(rapidity_higgs[0])<6.0 && pT_higgs[0]>=120   && pT_higgs[0]<200) && (pT_yy[0] >= 0. && pT_yy[0] < 60.)    && n_photons > 1 && pT_y1 > 25. && pT_y2 > 25. && rel_pT_y1 > 0.35 && rel_pT_y2 > 0.25 & m_yy[0] >= 110. && m_yy[0] <= 140. && n_bjets > 1 && (n_electrons > 0 || n_muons > 0)",
+            "TTH_CEN_PTH_120_200_pT_yy_bin2" : "(abs(rapidity_higgs[0])<6.0 && pT_higgs[0]>=120   && pT_higgs[0]<200) && (pT_yy[0] >= 60. && pT_yy[0] < 120.)  && n_photons > 1 && pT_y1 > 25. && pT_y2 > 25. && rel_pT_y1 > 0.35 && rel_pT_y2 > 0.25 & m_yy[0] >= 110. && m_yy[0] <= 140. && n_bjets > 1 && (n_electrons > 0 || n_muons > 0)",
+            "TTH_CEN_PTH_120_200_pT_yy_bin3" : "(abs(rapidity_higgs[0])<6.0 && pT_higgs[0]>=120   && pT_higgs[0]<200) && (pT_yy[0] >= 120. && pT_yy[0] < 200.) && n_photons > 1 && pT_y1 > 25. && pT_y2 > 25. && rel_pT_y1 > 0.35 && rel_pT_y2 > 0.25 & m_yy[0] >= 110. && m_yy[0] <= 140. && n_bjets > 1 && (n_electrons > 0 || n_muons > 0)",
+            "TTH_CEN_PTH_120_200_pT_yy_bin4" : "(abs(rapidity_higgs[0])<6.0 && pT_higgs[0]>=120   && pT_higgs[0]<200) && (pT_yy[0] >= 200. && pT_yy[0] < 300.) && n_photons > 1 && pT_y1 > 25. && pT_y2 > 25. && rel_pT_y1 > 0.35 && rel_pT_y2 > 0.25 & m_yy[0] >= 110. && m_yy[0] <= 140. && n_bjets > 1 && (n_electrons > 0 || n_muons > 0)",
+            "TTH_CEN_PTH_120_200_pT_yy_bin5" : "(abs(rapidity_higgs[0])<6.0 && pT_higgs[0]>=120   && pT_higgs[0]<200) && (pT_yy[0] >= 300.)                    && n_photons > 1 && pT_y1 > 25. && pT_y2 > 25. && rel_pT_y1 > 0.35 && rel_pT_y2 > 0.25 & m_yy[0] >= 110. && m_yy[0] <= 140. && n_bjets > 1 && (n_electrons > 0 || n_muons > 0)",
+            # 200 < pT(H) < 300 GeV
+            "TTH_CEN_PTH_200_300_pT_yy_bin1" : "(abs(rapidity_higgs[0])<6.0 && pT_higgs[0]>=200  && pT_higgs[0]<300) && (pT_yy[0] >= 0. && pT_yy[0] < 60.)    && n_photons > 1 && pT_y1 > 25. && pT_y2 > 25. && rel_pT_y1 > 0.35 && rel_pT_y2 > 0.25 & m_yy[0] >= 110. && m_yy[0] <= 140. && n_bjets > 1 && (n_electrons > 0 || n_muons > 0)",
+            "TTH_CEN_PTH_200_300_pT_yy_bin2" : "(abs(rapidity_higgs[0])<6.0 && pT_higgs[0]>=200  && pT_higgs[0]<300) && (pT_yy[0] >= 60. && pT_yy[0] < 120.)  && n_photons > 1 && pT_y1 > 25. && pT_y2 > 25. && rel_pT_y1 > 0.35 && rel_pT_y2 > 0.25 & m_yy[0] >= 110. && m_yy[0] <= 140. && n_bjets > 1 && (n_electrons > 0 || n_muons > 0)",
+            "TTH_CEN_PTH_200_300_pT_yy_bin3" : "(abs(rapidity_higgs[0])<6.0 && pT_higgs[0]>=200  && pT_higgs[0]<300) && (pT_yy[0] >= 120. && pT_yy[0] < 200.) && n_photons > 1 && pT_y1 > 25. && pT_y2 > 25. && rel_pT_y1 > 0.35 && rel_pT_y2 > 0.25 & m_yy[0] >= 110. && m_yy[0] <= 140. && n_bjets > 1 && (n_electrons > 0 || n_muons > 0)",
+            "TTH_CEN_PTH_200_300_pT_yy_bin4" : "(abs(rapidity_higgs[0])<6.0 && pT_higgs[0]>=200  && pT_higgs[0]<300) && (pT_yy[0] >= 200. && pT_yy[0] < 300.) && n_photons > 1 && pT_y1 > 25. && pT_y2 > 25. && rel_pT_y1 > 0.35 && rel_pT_y2 > 0.25 & m_yy[0] >= 110. && m_yy[0] <= 140. && n_bjets > 1 && (n_electrons > 0 || n_muons > 0)",
+            "TTH_CEN_PTH_200_300_pT_yy_bin5" : "(abs(rapidity_higgs[0])<6.0 && pT_higgs[0]>=200  && pT_higgs[0]<300) && (pT_yy[0] >= 300.)                    && n_photons > 1 && pT_y1 > 25. && pT_y2 > 25. && rel_pT_y1 > 0.35 && rel_pT_y2 > 0.25 & m_yy[0] >= 110. && m_yy[0] <= 140. && n_bjets > 1 && (n_electrons > 0 || n_muons > 0)",
+            # pT(H) > 300 GeV
+            "TTH_CEN_PTH_300_inf_pT_yy_bin1" : "(abs(rapidity_higgs[0])<6.0 && pT_higgs[0]>=300 ) && (pT_yy[0] >= 0. && pT_yy[0] < 60.)    && n_photons > 1 && pT_y1 > 25. && pT_y2 > 25. && rel_pT_y1 > 0.35 && rel_pT_y2 > 0.25 & m_yy[0] >= 110. && m_yy[0] <= 140. && n_bjets > 1 && (n_electrons > 0 || n_muons > 0)",
+            "TTH_CEN_PTH_300_inf_pT_yy_bin2" : "(abs(rapidity_higgs[0])<6.0 && pT_higgs[0]>=300 ) && (pT_yy[0] >= 60. && pT_yy[0] < 120.)  && n_photons > 1 && pT_y1 > 25. && pT_y2 > 25. && rel_pT_y1 > 0.35 && rel_pT_y2 > 0.25 & m_yy[0] >= 110. && m_yy[0] <= 140. && n_bjets > 1 && (n_electrons > 0 || n_muons > 0)",
+            "TTH_CEN_PTH_300_inf_pT_yy_bin3" : "(abs(rapidity_higgs[0])<6.0 && pT_higgs[0]>=300 ) && (pT_yy[0] >= 120. && pT_yy[0] < 200.) && n_photons > 1 && pT_y1 > 25. && pT_y2 > 25. && rel_pT_y1 > 0.35 && rel_pT_y2 > 0.25 & m_yy[0] >= 110. && m_yy[0] <= 140. && n_bjets > 1 && (n_electrons > 0 || n_muons > 0)",
+            "TTH_CEN_PTH_300_inf_pT_yy_bin4" : "(abs(rapidity_higgs[0])<6.0 && pT_higgs[0]>=300 ) && (pT_yy[0] >= 200. && pT_yy[0] < 300.) && n_photons > 1 && pT_y1 > 25. && pT_y2 > 25. && rel_pT_y1 > 0.35 && rel_pT_y2 > 0.25 & m_yy[0] >= 110. && m_yy[0] <= 140. && n_bjets > 1 && (n_electrons > 0 || n_muons > 0)",
+            "TTH_CEN_PTH_300_inf_pT_yy_bin5" : "(abs(rapidity_higgs[0])<6.0 && pT_higgs[0]>=300 ) && (pT_yy[0] >= 300.)                    && n_photons > 1 && pT_y1 > 25. && pT_y2 > 25. && rel_pT_y1 > 0.35 && rel_pT_y2 > 0.25 & m_yy[0] >= 110. && m_yy[0] <= 140. && n_bjets > 1 && (n_electrons > 0 || n_muons > 0)",
+            # Forward Higgs
+            "TTH_FWD_pT_yy_bin1" : "(abs(rapidity_higgs[0])>=6.0) && (pT_yy[0] >= 0. && pT_yy[0] < 60.)    && n_photons > 1 && pT_y1 > 25. && pT_y2 > 25. && rel_pT_y1 > 0.35 && rel_pT_y2 > 0.25 & m_yy[0] >= 110. && m_yy[0] <= 140. && n_bjets > 1 && (n_electrons > 0 || n_muons > 0)",
+            "TTH_FWD_pT_yy_bin2" : "(abs(rapidity_higgs[0])>=6.0) && (pT_yy[0] >= 60. && pT_yy[0] < 120.)  && n_photons > 1 && pT_y1 > 25. && pT_y2 > 25. && rel_pT_y1 > 0.35 && rel_pT_y2 > 0.25 & m_yy[0] >= 110. && m_yy[0] <= 140. && n_bjets > 1 && (n_electrons > 0 || n_muons > 0)",
+            "TTH_FWD_pT_yy_bin3" : "(abs(rapidity_higgs[0])>=6.0) && (pT_yy[0] >= 120. && pT_yy[0] < 200.) && n_photons > 1 && pT_y1 > 25. && pT_y2 > 25. && rel_pT_y1 > 0.35 && rel_pT_y2 > 0.25 & m_yy[0] >= 110. && m_yy[0] <= 140. && n_bjets > 1 && (n_electrons > 0 || n_muons > 0)",
+            "TTH_FWD_pT_yy_bin4" : "(abs(rapidity_higgs[0])>=6.0) && (pT_yy[0] >= 200. && pT_yy[0] < 300.) && n_photons > 1 && pT_y1 > 25. && pT_y2 > 25. && rel_pT_y1 > 0.35 && rel_pT_y2 > 0.25 & m_yy[0] >= 110. && m_yy[0] <= 140. && n_bjets > 1 && (n_electrons > 0 || n_muons > 0)",
+            "TTH_FWD_pT_yy_bin5" : "(abs(rapidity_higgs[0])>=6.0) && (pT_yy[0] >= 300.)                    && n_photons > 1 && pT_y1 > 25. && pT_y2 > 25. && rel_pT_y1 > 0.35 && rel_pT_y2 > 0.25 & m_yy[0] >= 110. && m_yy[0] <= 140. && n_bjets > 1 && (n_electrons > 0 || n_muons > 0)",
             # add more cuts here: note you need to && them, they are not sequential!
             }
 
@@ -65,25 +108,39 @@ histoList = {
     "n_jets":{"name":"n_jets","title":"Number of jets","bin":20,"xmin":-0.5,"xmax":19.5},
     "n_electrons":{"name":"n_electrons","title":"Number of electrons","bin":10,"xmin":-0.5,"xmax":9.5},
     "n_muons":{"name":"n_muons","title":"Number of muons","bin":10,"xmin":-0.5,"xmax":9.5},
+    "n_higgs":{"name":"n_higgs","title":"Number of Higgs bosons","bin":5,"xmin":-0.5,"xmax":4.5},
     # final discriminant
-    "m_yy":{"name":"m_yy","title":"m_{#gamma#gamma} [GeV]","bin":55,"xmin":105.,"xmax":160., "latex":"$m_{\gamma\gamma}$ [GeV]"},
+    "m_yy":{"name":"m_yy","title":"m_{#gamma#gamma} [GeV]","bin":100,"xmin":0.,"xmax":200., "latex":"$m_{\gamma\gamma}$ [GeV]"},
     # add more variables here
     # photon variables
     "E_y1"  :{"name":"E_y1","title":"Leading photon energy [GeV]","bin":50,"xmin":0.,"xmax":500.},
     "pT_y1" :{"name":"pT_y1","title":"Leading photon p_{T} [GeV]","bin":40,"xmin":0.,"xmax":400.,"latex":"Leading photon $p_{T}$ [GeV]"},
-    "eta_y1":{"name":"eta_y1","title":"Leading photon #eta","bin":40,"xmin":-4.0,"xmax":4.0,"latex":"Leading photon $\eta$"},
-    "phi_y1":{"name":"E_y1","title":"Leading photon #phi",  "bin":50,"xmin":-3.6,"xmax":3.6,"latex":"Leading photon $\phi$"},
+    "eta_y1":{"name":"eta_y1","title":"Leading photon #eta","bin":40,"xmin":-6.0,"xmax":6.0,"latex":"Leading photon $\eta$"},
+    "phi_y1":{"name":"phi_y1","title":"Leading photon #phi",  "bin":50,"xmin":-3.6,"xmax":3.6,"latex":"Leading photon $\phi$"},
     "rel_pT_y1":{"name":"rel_pT_y1","title":"Leading photon p_{T} / m_{#gamma#gamma}","bin":50,"xmin":0.,"xmax":3.,"latex":"Leading photon $p_{T}/m_{\gamma\gamma}$"},
+    #"iso_y1":{"name":"iso_y1","title":"Leading photon iso variable","bin":50,"xmin":0.,"xmax":0.5,"latex":"Leading photon iso variable"},
     "E_y2"  :{"name":"E_y2","title":"Subleading photon energy [GeV]","bin":50,"xmin":0.,"xmax":500.},
     "pT_y2" :{"name":"pT_y2","title":"Subleading photon p_{T} [GeV]","bin":40,"xmin":0.,"xmax":400.,"latex":"Subleading photon $p_{T}$ [GeV]"},
-    "eta_y2":{"name":"eta_y2","title":"Subleading photon #eta","bin":40,"xmin":-4.0,"xmax":4.0,"latex":"Subleading photon $\eta$"},
+    "eta_y2":{"name":"eta_y2","title":"Subleading photon #eta","bin":40,"xmin":-6.0,"xmax":6.0,"latex":"Subleading photon $\eta$"},
     "phi_y2":{"name":"phi_y2","title":"Subleading photon #phi","bin":50,"xmin":-3.6,"xmax":3.6,"latex":"Subleading photon $\phi$"},
     "rel_pT_y2":{"name":"rel_pT_y2","title":"Subleading photon p_{T} / m_{#gamma#gamma}","bin":50,"xmin":0.,"xmax":3.,"latex":"Subleading photon $p_{T}/m_{\gamma\gamma}$"},
+    #"iso_y2":{"name":"iso_y2","title":"Subleading photon iso variable","bin":50,"xmin":0.,"xmax":0.5,"latex":"Subleading photon iso variable"},
     "pT_yy" :{"name":"pT_yy","title":"p_{T}^{#gamma#gamma} [GeV]","bin":60,"xmin":0.,"xmax":600.,"latex":"$p_{T}^{\gamma\gamma}$ [GeV]"},
+    # Truth photons from Higgs
+    "HtoYY_n_truth_photons" : {"name":"HtoYY_n_truth_photons","title":"Number of truth photons from Higgs","bin":3,"xmin":-0.5,"xmax":2.5},
+    "HtoYY_truth_m_yy" :{"name":"HtoYY_truth_m_yy","title":"Truth m_{#gamma#gamma} from Higgs [GeV]","bin":50,"xmin":105.,"xmax":160., "latex":"Truth $m_{\gamma\gamma}$ [GeV]"},
+    "HtoYY_truth_E_y1" :{"name":"HtoYY_truth_E_y1","title":"Leading truth photon from Higgs energy [GeV]","bin":50,"xmin":0.,"xmax":500.},
+    "HtoYY_truth_pT_y1":{"name":"HtoYY_truth_pT_y1","title":"Leading truth photon from Higgs p_{T} [GeV]","bin":40,"xmin":0.,"xmax":400.,"latex":"Leading truth photon from Higgs $p_{T}$ [GeV]"},
+    "HtoYY_truth_eta_y1":{"name":"HtoYY_truth_eta_y1","title":"Leading truth photon from Higgs #eta","bin":40,"xmin":-6.0,"xmax":6.0,"latex":"Leading truth photon from Higgs $\eta$"},
+    "HtoYY_truth_phi_y1":{"name":"HtoYY_truth_phi_y1","title":"Leading truth photon from Higgs #phi",  "bin":50,"xmin":-3.6,"xmax":3.6,"latex":"Leading truth photon from Higgs $\phi$"},
+    "HtoYY_truth_E_y2" :{"name":"HtoYY_truth_E_y2","title":"Subleading truth photon from Higgs energy [GeV]","bin":50,"xmin":0.,"xmax":500.},
+    "HtoYY_truth_pT_y2":{"name":"HtoYY_truth_pT_y2","title":"Subleading truth photon from Higgs p_{T} [GeV]","bin":40,"xmin":0.,"xmax":400.,"latex":"Subleading truth photon from Higgs $p_{T}$ [GeV]"},
+    "HtoYY_truth_eta_y2":{"name":"HtoYY_truth_eta_y2","title":"Subleading truth photon from Higgs #eta","bin":40,"xmin":-6.0,"xmax":6.0,"latex":"Subleading truth photon from Higgs $\eta$"},
+    "HtoYY_truth_phi_y2":{"name":"HtoYY_truth_phi_y2","title":"Subleading truth photon from Higgs #phi","bin":50,"xmin":-3.6,"xmax":3.6,"latex":"Subleading truth photon from Higgs $\phi$"},
     # b-jet variables
     "E_b1"  :{"name":"E_b1","title":"Leading b-jet energy [GeV]","bin":50,"xmin":0.,"xmax":500.},
     "pT_b1" :{"name":"pT_b1","title":"Leading b-jet p_{T} [GeV]","bin":40,"xmin":0.,"xmax":400., "latex":"Leading b-jet $p_{T}$ [GeV]"},
-    "eta_b1":{"name":"eta_b1","title":"Leading b-jet #eta","bin":40,"xmin":-4.0,"xmax":4.0,"latex":"Leading b-jet $\eta$"},
+    "eta_b1":{"name":"eta_b1","title":"Leading b-jet #eta","bin":40,"xmin":-6.0,"xmax":6.0,"latex":"Leading b-jet $\eta$"},
     "phi_b1":{"name":"phi_b1","title":"Leading b-jet #phi",  "bin":50,"xmin":-3.6,"xmax":3.6,"latex":"Leading b-jet $\phi$"},
     "btag_score_b1":{"name":"btag_score_b1","title":"Leading b-jet b-tagging score","bin":4,"xmin":-0.5,"xmax":3.5},
     "E_b2"  :{"name":"E_b2","title":"Subleading b-jet energy [GeV]","bin":50,"xmin":0.,"xmax":500.},
@@ -146,5 +203,27 @@ histoList = {
     "pT_mu2" :{"name":"pT_mu2","title":"Subleading muon p_{T} [GeV]","bin":40,"xmin":0.,"xmax":200., "latex":"Subleading muon $p_{T}$ [GeV]"},
     "eta_mu2":{"name":"eta_mu2","title":"Subleading muon #eta","bin":60,"xmin":-6.0,"xmax":6.0,"latex":"Subleading muon $\eta$"},
     "phi_mu2":{"name":"phi_mu2","title":"Subleading muon #phi","bin":40,"xmin":-3.6,"xmax":3.6,"latex":"Subleading muon $\phi$"},
+    "E_l1"  :{"name":"E_l1","title":"Leading lepton energy [GeV]","bin":40,"xmin":0.,"xmax":400.},
+    "pT_l1" :{"name":"pT_l1","title":"Leading lepton p_{T} [GeV]","bin":40,"xmin":0.,"xmax":200., "latex":"Leading lepton $p_{T}$ [GeV]"},
+    "eta_l1":{"name":"eta_l1","title":"Leading lepton #eta","bin":60,"xmin":-6.0,"xmax":6.0,"latex":"Leading lepton $\eta$"},
+    "phi_l1":{"name":"phi_l1","title":"Leading lepton #phi",  "bin":40,"xmin":-3.6,"xmax":3.6,"latex":"Leading lepton $\phi$"},
+    "E_l2"  :{"name":"E_l2","title":"Subleading lepton energy [GeV]","bin":40,"xmin":0.,"xmax":400.},
+    "pT_l2" :{"name":"pT_l2","title":"Subleading lepton p_{T} [GeV]","bin":40,"xmin":0.,"xmax":200., "latex":"Subleading lepton $p_{T}$ [GeV]"},
+    "eta_l2":{"name":"eta_l2","title":"Subleading lepton #eta","bin":60,"xmin":-6.0,"xmax":6.0,"latex":"Subleading lepton $\eta$"},
+    "phi_l2":{"name":"phi_l2","title":"Subleading lepton #phi","bin":40,"xmin":-3.6,"xmax":3.6,"latex":"Subleading lepton $\phi$"},
+    "true_E_y1" : {"name":"true_E_y1","title":"Leading photon true energy [GeV]","bin":50,"xmin":0.,"xmax":500.},
+    "true_E_y2" : {"name":"true_E_y2","title":"Subleading photon true energy [GeV]","bin":50,"xmin":0.,"xmax":500},
+    "true_pT_y1" : {"name":"true_pT_y1","title":"Leading photon true p_{T} [GeV]","bin":40,"xmin":0.,"xmax":400., "latex":"Leading lepton $p_T$ [GeV]"},
+    "true_pT_y2" : {"name":"true_pT_y2","title":"Subleading photon true p_{T} [GeV]","bin":40,"xmin":0.,"xmax":400., "latex":"Subleading lepton $p_T$ [GeV]"},
+    "true_eta_y1" : {"name":"true_eta_y1","title":"Leading photon true #eta","bin":40,"xmin":-6.0,"xmax":6.0, "latex":"Leading photon $\eta$"},
+    "true_eta_y2" : {"name":"true_eta_y2","title":"Subleading photon true #eta","bin":40,"xmin":-6.0,"xmax":6.0, "latex":"Subleading photon $\eta$"},
+    "true_phi_y1" : {"name":"true_phi_y1","title":"Leading photon true #phi","bin":50,"xmin":-3.6,"xmax":3.6, "latex":"Leading photon $\phi$"},
+    "true_phi_y2" : {"name":"true_phi_y2","title":"Subleading photon true #phi","bin":50,"xmin":-3.6,"xmax":3.6, "latex":"Subleading photon $\phi$"},
+    "true_m_yy" : {"name":"true_m_yy","title":"True m_{#gamma#gamma} [GeV]","bin":60,"xmin":0.,"xmax":600., "latex":"True $m_{\gamma\gamma}$ [GeV]"},
+    'E_higgs' : {"name":"E_higgs","title":"Higgs energy [GeV]","bin":50,"xmin":0.,"xmax":5000.},
+    'pT_higgs' : {"name":"pT_higgs","title":"Higgs p_{T} [GeV]","bin":40,"xmin":0.,"xmax":1000., "latex":"Higgs $p_{T}$ [GeV]"},
+    'eta_higgs' : {"name":"eta_higgs","title":"Higgs #eta","bin":40,"xmin":-6.0,"xmax":6.0,"latex":"Higgs $\eta$"},
+    'phi_higgs' : {"name":"phi_higgs","title":"Higgs #phi","bin":50,"xmin":-3.6,"xmax":3.6,"latex":"Higgs $\phi$"},
+    'rapidity_higgs' : {"name":"phi_higgs","title":"Higgs rapidity","bin":50,"xmin":-10,"xmax":10,"latex":"Higgs rapidity"},
     # add more variables here
 }
