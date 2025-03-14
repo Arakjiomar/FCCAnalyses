@@ -27,6 +27,9 @@ namespace AnalysisFCChh {
 TLorentzVector getTLV_reco(edm4hep::ReconstructedParticleData reco_part);
 TLorentzVector getTLV_MC(edm4hep::MCParticleData MC_part);
 
+// create TLV starting from PT, ETA, PHI, E
+TLorentzVector getTLV(float pt, float eta, float phi, float E);
+
 // struct to use for a pair of two reco particles, to make sure the correct ones
 // stay together
 struct RecoParticlePair {

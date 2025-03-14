@@ -910,6 +910,13 @@ TLorentzVector AnalysisFCChh::getTLV_MC(edm4hep::MCParticleData MC_part) {
   return tlv;
 }
 
+// helper function to create TLV
+TLorentzVector AnalysisFCChh::getTLV(float pt, float eta, float phi, float E) {
+  TLorentzVector tlv(0.,0.,0.,0.);
+  tlv.SetPtEtaPhiE(pt, eta, phi, E);
+  return tlv;
+}
+
 ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData>
 AnalysisFCChh::merge_pairs(ROOT::VecOps::RVec<RecoParticlePair> pairs) {
   ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> merged_pairs;
