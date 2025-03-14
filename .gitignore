@@ -114,3 +114,4 @@ benchmark*json
 
 # Notebooks
 *.ipynb_checkpoints
+*tests*
