@@ -32,13 +32,12 @@ class Analysis():
             # # If you want to process only part of the events, split the output into chunks or give a different name to the output use the optional arguments
             # # or leave blank to use defaults = run the full statistics in one output file named the same as the process:
             # ttH(yy) signal
-            'mgp8_pp_tth01j_5f_haa': {'chunks':100},
-            #'mgp8_pp_tth01j_5f_84TeV_haaexcl' : {'chunks': 10},
+            'mgp8_pp_tth01j_5f_84TeV_haaexcl' : {'chunks': 100},
             # Backgrounds 
-            #'mgp8_pp_jjaa_5f': {'chunks':50}, #yy+jets
-            #'mgp8_pp_ttaa_semilep_5f_100TeV': {'chunks':5}, #ttyy tester
-            #'events_ttaa01j_semilep_tester' : {'chunks': 5}, #ttyy tester
-            #'mgp8_pp_Vaajj_HF_5f_84TeV' : {'chunks': 100}, #V+yy+jets
+           # 'mgp8_pp_ttaa01j_5f_84TeV': {'chunks':100}, #ttyy+jets
+           # 'mgp8_pp_Vaajj_HF_5f_84TeV' : {'chunks': 100}, #V+yy+bb/cc
+            # HH->bbyy test
+           # 'pwp8_pp_hh_lambda100_5f_hhbbaa' : {'chunks': 100},
         }
 
         # Mandatory: Input directory where to find the samples, or a production tag when running over the centrally produced
@@ -47,7 +46,7 @@ class Analysis():
         #self.input_dir =  '/eos/user/b/bistapf/FCChh_sample_testers/'
 
         # Optional: output directory, default is local running directory
-        self.output_dir = '/eos/user/e/elmazzeo/ttH@FCC-hh/results/2025-03-06_new' + '/ntuples/'
+        self.output_dir = '/eos/user/e/elmazzeo/ttH@FCC-hh/results/2025-03-10' + '/ntuples/'
 
         # Optional: analysisName, default is ''
         self.analysis_name = 'FCC-hh ttH(yy) analysis'
@@ -66,9 +65,8 @@ class Analysis():
 
         # Optional: test file that is used if you run with the --test argument 
         self.test_file = 'root://eospublic.cern.ch//eos/experiment/fcc/hh/' \
-                         'generation/DelphesEvents/fcc_v07/II/mgp8_pp_tth01j_5f_haa/' \
-                         'events_000000001.root'
-        self.test_file = '/eos/user/b/bistapf/FCChh_sample_testers/events_ttaa01j_inclusive_tester.root'
+                         'generation/DelphesEvents/fcc_v07/II/mgp8_pp_tth01j_5f_84TeV_haaexcl/' \
+                         'events_119603512.root'
 
 
     # Mandatory: analyzers function to define the analysis graph, please make
@@ -88,12 +86,12 @@ class Analysis():
 
             ########################################### PHOTONS ########################################### 
             # all photons passing particle ID
-            .Define("gamma",  "FCCAnalyses::ReconstructedParticle::get(PhotonNoIso_objIdx.index, ReconstructedParticles)")
+            .Define("gamma",  "FCCAnalyses::ReconstructedParticle::get(Photon_objIdx.index, ReconstructedParticles)")
             .Define("idx_gamma",  "FCCAnalyses::ReconstructedParticle::get_idx(gamma)")
             # apply pT selection
             .Define("selpt_gamma", "FCCAnalyses::ReconstructedParticle::sel_pt({photon_pt})(gamma)".format(photon_pt=self.ana_args.photon_pt))
             .Define("idx_selpt_gamma", "FCCAnalyses::ReconstructedParticle::sel_pt({photon_pt})(gamma, idx_gamma)".format(photon_pt=self.ana_args.photon_pt))
-            .Define("idx_selpt_gamma1", "FCCAnalyses::ReconstructedParticle::sel_pt({photon_pt})(gamma, PhotonNoIso_objIdx.index)".format(photon_pt=self.ana_args.photon_pt))
+            .Define("idx_selpt_gamma1", "FCCAnalyses::ReconstructedParticle::sel_pt({photon_pt})(gamma, Photon_objIdx.index)".format(photon_pt=self.ana_args.photon_pt))
             # apply |eta| selection
             .Define("sel_gamma_unsort", "FCCAnalyses::ReconstructedParticle::sel_eta(6.)(selpt_gamma)")
             .Define("idx_sel_gamma_unsort", "FCCAnalyses::ReconstructedParticle::sel_eta(6.)(selpt_gamma, idx_selpt_gamma)")
@@ -108,20 +106,21 @@ class Analysis():
             .Define("pT_photons",  "FCCAnalyses::ReconstructedParticle::get_pt(sel_gamma)")
             .Define("eta_photons",  "FCCAnalyses::ReconstructedParticle::get_eta(sel_gamma)")
             .Define("phi_photons",  "FCCAnalyses::ReconstructedParticle::get_phi(sel_gamma)")
-            .Define("iso_photons",  "FCCAnalyses::ReconstructedParticle::get(idx_sel_gamma, PhotonNoIso_IsolationVar)")
             # H(yy) if it exists, if there are no 2 selected photons, doesnt get filled 
             .Define("yy_pairs_unmerged", "AnalysisFCChh::getPairs(sel_gamma)") # retrieves the leading pT pair of all possible 
             .Define("yy_pairs", "AnalysisFCChh::merge_pairs(yy_pairs_unmerged)") # merge pair into one object to access inv masses etc
             .Define("m_yy", "FCCAnalyses::ReconstructedParticle::get_mass(yy_pairs)")
             .Define("pT_yy", "FCCAnalyses::ReconstructedParticle::get_pt(yy_pairs)")
             .Define("rapidity_yy", "FCCAnalyses::ReconstructedParticle::get_y(yy_pairs)")
+            # theta between the two photons
+            .Define("theta_y_y", "(n_photons > 1) ? FCCAnalyses::ReconstructedParticle::get_tlv(sel_gamma[0]).Vect().Angle(FCCAnalyses::ReconstructedParticle::get_tlv(sel_gamma[1]).Vect()) : -999.")
+            .Define("cos_theta_y_y", "(n_photons > 1) ? TMath::Cos(theta_y_y) : -999.")
             # leading photon
             .Define("E_y1", "(n_photons > 0) ? E_photons[0] : -999.")
             .Define("pT_y1", "(n_photons > 0) ? pT_photons[0] : -999.")
             .Define("eta_y1", "(n_photons > 0) ? eta_photons[0] : -999.")
             .Define("phi_y1", "(n_photons > 0) ? phi_photons[0] : -999.")
             .Define("rel_pT_y1", "(n_photons > 0) ? pT_y1/m_yy[0] : -999.")
-            .Define("iso_y1", "(n_photons > 0) ? iso_photons[0] : -999.")
             .Define("idx_y1", "(n_photons > 0) ? idx_sel_gamma1[0] : -999.")
             # subleading photon
             .Define("E_y2", "(n_photons > 1) ? E_photons[1] : -999.")
@@ -129,7 +128,6 @@ class Analysis():
             .Define("eta_y2", "(n_photons > 1) ? eta_photons[1] : -999.")
             .Define("phi_y2", "(n_photons > 1) ? phi_photons[1] : -999.")
             .Define("rel_pT_y2", "(n_photons > 1) ? pT_y2/m_yy[0] : -999.")
-            .Define("iso_y2", "(n_photons > 1) ? iso_photons[1] : -999.")
             .Define("idx_y2", "(n_photons > 1) ? idx_sel_gamma1[1] : -999.")
             .Define("DR_y_y", "(n_photons > 1) ? FCCAnalyses::ReconstructedParticle::get_tlv(sel_gamma[0]).DeltaR(FCCAnalyses::ReconstructedParticle::get_tlv(sel_gamma[1])) : -999.")
             # reco-to-MC particle association
@@ -150,57 +148,13 @@ class Analysis():
             .Define('true_phi_y2',"(idx_y2 >= 0) ? true_TLV_y2.Phi() : -999.")
             .Define('true_m_yy',"(idx_y1 >= 0 && idx_y2 >=0) ? (true_TLV_y1 + true_TLV_y2).M() : -999.")
             .Define('true_DR_y_y',"(idx_y1 >= 0 && idx_y2 >=0) ? true_TLV_y1.DeltaR(true_TLV_y2) : -999.")
-            # get reco photons from Higgs
-            # from collections of > 10 GeV photons, |eta| < 6, sorted by pT
-            .Define("is_from_higgs", "AnalysisFCChh::IsRecoPhotonFromHiggs(MCRecoAssociations0, MCRecoAssociations1, ReconstructedParticles, Particle, _Particle_parents, sel_gamma, idx_sel_gamma1)")
-            .Define("n_photons_from_higgs", "std::count(is_from_higgs.begin(), is_from_higgs.end(), true);")
-            .Define("HtoYY_photons", "AnalysisFCChh::GetRecoPhotonsFromHiggs(MCRecoAssociations0, MCRecoAssociations1, ReconstructedParticles, Particle, _Particle_parents, sel_gamma, idx_sel_gamma1)")
-            .Define("HtoYY_photons_TLV", "FCCAnalyses::ReconstructedParticle::get_tlv(HtoYY_photons)")
-            .Define("HtoYY_TLV_y1", "(n_photons_from_higgs > 0) ? HtoYY_photons_TLV[0] : TLorentzVector(0.,0.,0.,0.)")
-            .Define("HtoYY_TLV_y2", "(n_photons_from_higgs > 1) ? HtoYY_photons_TLV[1] : TLorentzVector(0.,0.,0.,0.)")
-            .Define("HtoYY_E_photons", "FCCAnalyses::ReconstructedParticle::get_e(HtoYY_photons)")
-            .Define("HtoYY_pT_photons", "FCCAnalyses::ReconstructedParticle::get_pt(HtoYY_photons)")
-            .Define("HtoYY_eta_photons", "FCCAnalyses::ReconstructedParticle::get_eta(HtoYY_photons)")
-            .Define("HtoYY_phi_photons", "FCCAnalyses::ReconstructedParticle::get_phi(HtoYY_photons)")
-            .Define("HtoYY_photons_idx", "AnalysisFCChh::GetRecoPhotonIndicesFromHiggs(MCRecoAssociations0, MCRecoAssociations1, ReconstructedParticles, Particle, _Particle_parents, sel_gamma, idx_sel_gamma1)")
-            .Define("HtoYY_idx_y1", "(n_photons_from_higgs > 0) ? HtoYY_photons_idx[0] : -999.")
-            .Define("HtoYY_idx_y2", "(n_photons_from_higgs > 1) ? HtoYY_photons_idx[1] : -999.")
+            .Define('true_pT_yy',"(idx_y1 >= 0 && idx_y2 >=0) ? (true_TLV_y1 + true_TLV_y2).Pt() : -999.")
+            .Define("true_theta_y_y", "(idx_y1 >= 0 && idx_y2 >=0) ? true_TLV_y1.Vect().Angle(true_TLV_y2.Vect()) : -999.")
+            .Define("true_cos_theta_y_y", "(idx_y1 >= 0 && idx_y2 >=0) ? TMath::Cos(true_theta_y_y) : -999.")
+            # check if the selected reco photons have Higgs parents
             .Define("RP2MC_index", "FCCAnalyses::ReconstructedParticle2MC::getRP2MC_index(MCRecoAssociations0, MCRecoAssociations1, ReconstructedParticles)")
-            .Define("HtoYY_has_higgs_parent_y1", "(n_photons_from_higgs > 0) ? AnalysisFCChh::hasHiggsParent(Particle.at(RP2MC_index[HtoYY_idx_y1]), _Particle_parents, Particle) : false")
-            .Define("HtoYY_has_higgs_parent_y2", "(n_photons_from_higgs > 1) ? AnalysisFCChh::hasHiggsParent(Particle.at(RP2MC_index[HtoYY_idx_y2]), _Particle_parents, Particle) : false")
             .Define("has_higgs_parent_y1", "(idx_y1 >= 0) ? AnalysisFCChh::hasHiggsParent(Particle.at(RP2MC_index[idx_y1]), _Particle_parents, Particle) : false")
-            .Define("has_higgs_parent_y2", "(idx_y2 >= 0) ? AnalysisFCChh::hasHiggsParent(Particle.at(RP2MC_index[idx_y2]), _Particle_parents, Particle) : false")
-            .Define("HtoYY_E_y1", "(n_photons_from_higgs > 0) ? HtoYY_E_photons[0] : -999.")
-            .Define("HtoYY_pT_y1", "(n_photons_from_higgs > 0) ? HtoYY_pT_photons[0] : -999.")
-            .Define("HtoYY_eta_y1", "(n_photons_from_higgs > 0) ? HtoYY_eta_photons[0] : -999.")
-            .Define("HtoYY_phi_y1", "(n_photons_from_higgs > 0) ? HtoYY_phi_photons[0] : -999.")
-            .Define("HtoYY_E_y2", "(n_photons_from_higgs > 1) ? HtoYY_E_photons[1] : -999.")
-            .Define("HtoYY_pT_y2", "(n_photons_from_higgs > 1) ? HtoYY_pT_photons[1] : -999.")
-            .Define("HtoYY_eta_y2", "(n_photons_from_higgs > 1) ? HtoYY_eta_photons[1] : -999.")
-            .Define("HtoYY_phi_y2", "(n_photons_from_higgs > 1) ? HtoYY_phi_photons[1] : -999.")
-            .Define("HtoYY_m_yy", "(n_photons_from_higgs > 1) ? (HtoYY_TLV_y1 + HtoYY_TLV_y2).M() : -999.")
-            .Define('HtoYY_DR_y_y',"(HtoYY_idx_y1 >= 0 && HtoYY_idx_y2 >=0) ? HtoYY_TLV_y1.DeltaR(HtoYY_TLV_y2) : -999.")
-            .Define('HtoYY_pT_yy',"(HtoYY_idx_y1 >= 0 && HtoYY_idx_y2 >=0) ? (HtoYY_TLV_y1 + HtoYY_TLV_y2).Pt() : -999.")
-            .Define("HtoYY_true_TLV_y1", "(HtoYY_idx_y1 >= 0) ? true_TLV[HtoYY_idx_y1] : TLorentzVector(0.,0.,0.,0.)")
-            .Define("HtoYY_true_TLV_y2", "(HtoYY_idx_y2 >= 0) ? true_TLV[HtoYY_idx_y2] : TLorentzVector(0.,0.,0.,0.)")
-            .Define('HtoYY_true_E_y1',"(HtoYY_idx_y1 >= 0) ? HtoYY_true_TLV_y1.E() : -999.")
-            .Define('HtoYY_true_pT_y1',"(HtoYY_idx_y1 >= 0) ? HtoYY_true_TLV_y1.Pt() : -999.")
-            .Define('HtoYY_true_eta_y1',"(HtoYY_idx_y1 >= 0) ? HtoYY_true_TLV_y1.Eta() : -999.")
-            .Define('HtoYY_true_phi_y1',"(HtoYY_idx_y1 >= 0) ? HtoYY_true_TLV_y1.Phi() : -999.")
-            .Define('HtoYY_true_E_y2',"(HtoYY_idx_y2 >= 0) ? HtoYY_true_TLV_y2.E() : -999.")
-            .Define('HtoYY_true_pT_y2',"(HtoYY_idx_y2 >= 0) ? HtoYY_true_TLV_y2.Pt() : -999.")
-            .Define('HtoYY_true_eta_y2',"(HtoYY_idx_y2 >= 0) ? HtoYY_true_TLV_y2.Eta() : -999.")
-            .Define('HtoYY_true_phi_y2',"(HtoYY_idx_y2 >= 0) ? HtoYY_true_TLV_y2.Phi() : -999.")
-            .Define('HtoYY_true_m_yy',"(HtoYY_idx_y1 >= 0 && HtoYY_idx_y2 >=0) ? (HtoYY_true_TLV_y1 + HtoYY_true_TLV_y2).M() : -999.")
-            .Define('HtoYY_true_pT_yy',"(HtoYY_idx_y1 >= 0 && HtoYY_idx_y2 >=0) ? (HtoYY_true_TLV_y1 + HtoYY_true_TLV_y2).Pt() : -999.")
-            .Define('HtoYY_true_DR_y_y',"(HtoYY_idx_y1 >= 0 && HtoYY_idx_y2 >=0) ? HtoYY_true_TLV_y1.DeltaR(HtoYY_true_TLV_y2) : -999.")
-            # get isolation variable for the photons from Higgs
-            .Define("helper_y1", "ROOT::VecOps::abs(PhotonNoIso_objIdx.index-HtoYY_idx_y1)")
-            .Define("helper_y2", "ROOT::VecOps::abs(PhotonNoIso_objIdx.index-HtoYY_idx_y2)")
-            .Define("HtoYY_instance_y1", "(HtoYY_idx_y1 >= 0) ? ROOT::VecOps::ArgMin(helper_y1) : -999")
-            .Define("HtoYY_instance_y2", "(HtoYY_idx_y2 >= 0) ? ROOT::VecOps::ArgMin(helper_y2) : -999")
-            .Define("HtoYY_iso_y1", "(HtoYY_idx_y1 >= 0) ? iso_photons[HtoYY_instance_y1] : -999.")
-            .Define("HtoYY_iso_y2", "(HtoYY_idx_y2 >= 0) ? iso_photons[HtoYY_instance_y2] : -999.")
+            .Define("has_higgs_parent_y2", "(idx_y2 >= 0) ? AnalysisFCChh::hasHiggsParent(Particle.at(RP2MC_index[idx_y2]), _Particle_parents, Particle) : false")       
             # get truth photons from Higgs
             .Define("HtoYY_truth_photons", "AnalysisFCChh::getPhotonsFromH(Particle, _Particle_parents)")
             .Define("HtoYY_truth_photons_TLV", "FCCAnalyses::MCParticle::get_tlv(HtoYY_truth_photons)")
@@ -217,8 +171,14 @@ class Analysis():
             .Define("HtoYY_truth_pT_y2", "(HtoYY_n_truth_photons > 1) ? HtoYY_pT_truth_photons[1] : -999.")
             .Define("HtoYY_truth_eta_y2", "(HtoYY_n_truth_photons > 1) ? HtoYY_eta_truth_photons[1] : -999.")
             .Define("HtoYY_truth_phi_y2", "(HtoYY_n_truth_photons > 1) ? HtoYY_phi_truth_photons[1] : -999.")
-            .Define("HtoYY_truth_m_yy", "(HtoYY_n_truth_photons > 1) ? (HtoYY_truth_photons_TLV[0] + HtoYY_truth_photons_TLV[1]).M() : -999.")          
-            # reco-to-MC particle association for photons from Higgs
+            .Define("HtoYY_truth_m_yy", "(HtoYY_n_truth_photons > 1) ? (HtoYY_truth_photons_TLV[0] + HtoYY_truth_photons_TLV[1]).M() : -999.")  
+            # TLV test for myy resolution
+            .Define("TLV_y1", "(n_photons > 0) ? AnalysisFCChh::getTLV(E_y1/TMath::CosH(true_eta_y1), true_eta_y1, true_phi_y1, E_y1) : TLorentzVector(0.,0.,0.,0.)")
+            .Define("TLV_y2", "(n_photons > 1) ? AnalysisFCChh::getTLV(E_y2/TMath::CosH(true_eta_y2), true_eta_y2, true_phi_y2, E_y2) : TLorentzVector(0.,0.,0.,0.)")
+            .Define("test_m_yy", "(n_photons > 1) ? (TLV_y1 + TLV_y2).M() : -999.")
+            .Define("test_pT_yy", "(n_photons > 1) ? (TLV_y1 + TLV_y2).Pt() : -999.")
+            .Define("test_theta_y_y", "(n_photons > 1) ? TLV_y1.Vect().Angle(TLV_y2.Vect()) : -999.")
+            .Define("test_cos_theta_y_y", "(n_photons > 1) ? TMath::Cos(test_theta_y_y) : -999.")
             ########################################### ELECTRONS ########################################### 
             .Define("electrons",  "FCCAnalyses::ReconstructedParticle::get(Electron_objIdx.index, ReconstructedParticles)")
             .Define("n_all_electrons",  "FCCAnalyses::ReconstructedParticle::get_n(electrons)")
@@ -502,7 +462,7 @@ class Analysis():
             .Define("phi_truth_y2", "(n_truth_photons > 1) ? phi_truth_photons[1] : -999.")
             ########################################### APPLY PRE-SELECTION ########################################### 
             # require H->yy decay for signal sample
-            .Filter("higgs_decay_type==7")
+#            .Filter("higgs_decay_type==7")
         )
         return dframe2
 
@@ -515,11 +475,12 @@ class Analysis():
         branch_list = [
             'weight',
             # Photons
-            'n_photons', 'E_photons', 'pT_photons', 'eta_photons', 'phi_photons', 'iso_photons', 'is_from_higgs',
+            'n_photons', 'E_photons', 'pT_photons', 'eta_photons', 'phi_photons',
             'm_yy', "pT_yy", "rapidity_yy",
-            "E_y1", "pT_y1", "eta_y1", "phi_y1", "rel_pT_y1", "iso_y1", "idx_y1", "has_higgs_parent_y1",
-            "E_y2", "pT_y2", "eta_y2", "phi_y2", "rel_pT_y2", "iso_y2", "idx_y2", "has_higgs_parent_y2",
-            "DR_y_y", 
+            "E_y1", "pT_y1", "eta_y1", "phi_y1", "rel_pT_y1", "idx_y1", "has_higgs_parent_y1",
+            "E_y2", "pT_y2", "eta_y2", "phi_y2", "rel_pT_y2", "idx_y2", "has_higgs_parent_y2",
+            "DR_y_y",  
+            'theta_y_y', 'cos_theta_y_y',
             "DR_y1_b1", "DR_y1_b2", "DR_y1_j1", "DR_y1_j2",
             "DR_y2_b1", "DR_y2_b2", "DR_y2_j1", "DR_y2_j2",
             "DR_y1_l1", "DR_y1_l2", "DR_y2_l1", "DR_y2_l2",
@@ -528,25 +489,15 @@ class Analysis():
             "true_E_y1", "true_pT_y1", "true_eta_y1", "true_phi_y1",
             "true_E_y2", "true_pT_y2", "true_eta_y2", "true_phi_y2",
             "pdgID_y1", "pdgID_y2",
-            "true_m_yy",
-            # reco photons from Higgs
-            "n_photons_from_higgs", 
-            "HtoYY_E_photons", "HtoYY_pT_photons", "HtoYY_eta_photons", "HtoYY_phi_photons",
-            "HtoYY_idx_y1", "HtoYY_idx_y2",
-            "HtoYY_has_higgs_parent_y1", "HtoYY_has_higgs_parent_y2",
-            "HtoYY_E_y1", "HtoYY_pT_y1", "HtoYY_eta_y1", "HtoYY_phi_y1",
-            "HtoYY_E_y2", "HtoYY_pT_y2", "HtoYY_eta_y2", "HtoYY_phi_y2",
-            "HtoYY_m_yy", "HtoYY_DR_y_y", "HtoYY_pT_yy",
-            "HtoYY_iso_y1", "HtoYY_iso_y2",
-            # reco-to-truth particle association for photons from Higgs
-             "HtoYY_true_E_y1", "HtoYY_true_pT_y1", "HtoYY_true_eta_y1", "HtoYY_true_phi_y1",
-             "HtoYY_true_E_y2", "HtoYY_true_pT_y2", "HtoYY_true_eta_y2", "HtoYY_true_phi_y2",    
-             "HtoYY_true_m_yy", "HtoYY_true_pT_yy", "HtoYY_true_DR_y_y",
+            "true_m_yy", 'true_pT_yy', 'true_DR_y_y',
+            'true_theta_y_y', 'true_cos_theta_y_y',
             # truth photons from Higgs
              "HtoYY_n_truth_photons", "HtoYY_truth_m_yy",
              "HtoYY_E_truth_photons", "HtoYY_pT_truth_photons", "HtoYY_eta_truth_photons", "HtoYY_phi_truth_photons",
              "HtoYY_truth_E_y1", "HtoYY_truth_pT_y1", "HtoYY_truth_eta_y1", "HtoYY_truth_phi_y1",
              "HtoYY_truth_E_y2", "HtoYY_truth_pT_y2", "HtoYY_truth_eta_y2", "HtoYY_truth_phi_y2",
+            # test for the myy resolution
+             "test_m_yy", "test_theta_y_y", "test_pT_yy", "test_cos_theta_y_y",
             # Leptons
             'n_electrons', 'n_all_electrons', 'E_electrons', 'pT_electrons', 'eta_electrons', 'phi_electrons', 
             "m_ee",
