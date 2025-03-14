@@ -21,6 +21,7 @@ ROOT::VecOps::RVec<bool> AnalysisFCChh::IsRecoPhotonFromHiggs(
 	ROOT::VecOps::RVec<int> all_mc_idx,
   ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> all_reco_particles,
   ROOT::VecOps::RVec<edm4hep::MCParticleData> all_mc_particles,
+  ROOT::VecOps::RVec<podio::ObjectID> all_mc_particles_parents,
   ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> photons,
   ROOT::VecOps::RVec<int> photons_idx) {
     
@@ -29,6 +30,7 @@ ROOT::VecOps::RVec<bool> AnalysisFCChh::IsRecoPhotonFromHiggs(
   // loop over the reco photon pairs
   float mH = 125.;
   float best = 999999.;
+  float tolerance = 0.1;
   int ph1_idx = -1;
   int ph2_idx = -1;
   for (int i = 0; i < photons.size(); i++) {
@@ -37,11 +39,12 @@ ROOT::VecOps::RVec<bool> AnalysisFCChh::IsRecoPhotonFromHiggs(
       int mc_idx_1 = index[photons_idx[i]];
       int mc_idx_2 = index[photons_idx[j]];
       // check if the truth particle is a stable photon
-      if (isStablePhoton(all_mc_particles[mc_idx_1]) && isStablePhoton(all_mc_particles[mc_idx_2])) {
+      // and that it does not come from the hadron
+      if (isStablePhoton(all_mc_particles[mc_idx_1]) && isStablePhoton(all_mc_particles[mc_idx_2]) && !isFromHadron(all_mc_particles[mc_idx_1], all_mc_particles_parents, all_mc_particles) && !isFromHadron(all_mc_particles[mc_idx_2], all_mc_particles_parents, all_mc_particles)) {
         // in this case calculate myy truth
-        ROOT::Math::PtEtaPhiMVector photon1(photons[i].momentum.x, photons[i].momentum.y, photons[i].momentum.z, photons[i].mass);
-        ROOT::Math::PtEtaPhiMVector photon2(photons[j].momentum.x, photons[j].momentum.y, photons[j].momentum.z, photons[j].mass);
-        ROOT::Math::PtEtaPhiMVector diphoton = photon1 + photon2;
+        ROOT::Math::PxPyPzMVector photon1(all_mc_particles[mc_idx_1].momentum.x, all_mc_particles[mc_idx_1].momentum.y, all_mc_particles[mc_idx_1].momentum.z, all_mc_particles[mc_idx_1].mass);
+        ROOT::Math::PxPyPzMVector photon2(all_mc_particles[mc_idx_1].momentum.x, all_mc_particles[mc_idx_1].momentum.y, all_mc_particles[mc_idx_1].momentum.z, all_mc_particles[mc_idx_1].mass);
+        ROOT::Math::PxPyPzMVector diphoton = photon1 + photon2;
         if (abs(diphoton.M() - mH)<best) {
           best = abs(diphoton.M() - mH);
           ph1_idx = i;
@@ -68,11 +71,12 @@ ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> AnalysisFCChh::GetRecoPho
   ROOT::VecOps::RVec<int> all_mc_idx,
   ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> all_reco_particles,
   ROOT::VecOps::RVec<edm4hep::MCParticleData> all_mc_particles,
+  ROOT::VecOps::RVec<podio::ObjectID> all_mc_particles_parents,
   ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> photons,
   ROOT::VecOps::RVec<int> photons_idx) {
     
   // get truth particles indices associated with reco particles
-  ROOT::VecOps::RVec<bool> is_from_higgs = AnalysisFCChh::IsRecoPhotonFromHiggs(all_reco_idx, all_mc_idx, all_reco_particles, all_mc_particles, photons, photons_idx);
+  ROOT::VecOps::RVec<bool> is_from_higgs = AnalysisFCChh::IsRecoPhotonFromHiggs(all_reco_idx, all_mc_idx, all_reco_particles, all_mc_particles, all_mc_particles_parents, photons, photons_idx);
   ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> photons_from_higgs;
   for (int i = 0; i < photons.size(); i++) {
     if (is_from_higgs[i]) {
@@ -88,12 +92,13 @@ ROOT::VecOps::RVec<int> AnalysisFCChh::GetRecoPhotonIndicesFromHiggs(
   ROOT::VecOps::RVec<int> all_mc_idx,
   ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> all_reco_particles,
   ROOT::VecOps::RVec<edm4hep::MCParticleData> all_mc_particles,
+  ROOT::VecOps::RVec<podio::ObjectID> all_mc_particles_parents,
   ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> photons,
   ROOT::VecOps::RVec<int> photons_idx) {
     
   // get array of photons from Higgs
-  ROOT::VecOps::RVec<bool> is_from_higgs = AnalysisFCChh::IsRecoPhotonFromHiggs(all_reco_idx, all_mc_idx, all_reco_particles, all_mc_particles, photons, photons_idx);
-  ROOT::VecOps::RVec<int> photons_from_higgs_idx;
+  ROOT::VecOps::RVec<bool> is_from_higgs = AnalysisFCChh::IsRecoPhotonFromHiggs(all_reco_idx, all_mc_idx, all_reco_particles, all_mc_particles, all_mc_particles_parents, photons, photons_idx);
+  ROOT::VecOps::RVec<int> photons_from_higgs_idx(0);
   for (int i = 0; i < photons.size(); i++) {
     if (is_from_higgs[i]) {
       photons_from_higgs_idx.push_back(photons_idx[i]);
@@ -318,22 +323,46 @@ bool AnalysisFCChh::hasHiggsParent(
     if (isH(parent)) {
       return true;
     }
-    return hasHiggsParent(parent, parent_ids, truth_particles);
   }
 
   return false;
 }
 
 ROOT::VecOps::RVec<bool> hasHiggsParent(
-  ROOT::VecOps::RVec<edm4hep::MCParticleData> truth_part,
+  ROOT::VecOps::RVec<edm4hep::MCParticleData> my_truth_particles,
   ROOT::VecOps::RVec<podio::ObjectID> parent_ids,
   ROOT::VecOps::RVec<edm4hep::MCParticleData> truth_particles) {
-    ROOT::VecOps::RVec<bool> hasHiggs;
-    for (int i = 0; i < truth_part.size(); i++) {
-        hasHiggs.push_back(hasHiggsParent(truth_part.at(i), parent_ids, truth_particles));
+    std::vector<bool> hasHiggs(0);
+    for (int i = 0; i < my_truth_particles.size(); i++) {
+        hasHiggs.push_back(hasHiggsParent(my_truth_particles.at(i), parent_ids, truth_particles));
     }
     return hasHiggs;
   }
+
+  ROOT::VecOps::RVec<bool> hasHiggsParent(
+    ROOT::VecOps::RVec<int> my_reco_particles,
+    ROOT::VecOps::RVec<int> recind,
+    ROOT::VecOps::RVec<int> mcind,
+    ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> reco_particles,
+    ROOT::VecOps::RVec<podio::ObjectID> parent_ids,
+    ROOT::VecOps::RVec<edm4hep::MCParticleData> truth_particles){
+      // result vector
+//      ROOT::VecOps::RVec<bool> hasHiggs (1, false);
+      // first find truth-matched reco particles
+//      ROOT::VecOps::RVec<int> index = FCCAnalyses::ReconstructedParticle2MC::getRP2MC_index(recind, mcind, reco_particles);
+
+//      assert (*std::max_element(my_reco_particles.begin(), my_reco_particles.end()) < index.size());
+//      for (int i=0; i<my_reco_particles.size(); i++) {
+//        // get the index of the truth particle associated with the reco particle
+//        int mc_idx = index[my_reco_particles[i]];
+//        // check if the truth particle has a Higgs parent
+//        assert (mc_idx < truth_particles.size());
+//        bool flag = hasHiggsParent(truth_particles.at(mc_idx), parent_ids, truth_particles);
+//        hasHiggs.push_back(flag);
+//      }
+//      return hasHiggs;
+      return ROOT::VecOps::RVec<bool>(1, false);
+    }
 
 bool AnalysisFCChh::hasTopParent(
   edm4hep::MCParticleData truth_part,
@@ -700,7 +729,7 @@ int AnalysisFCChh::findHiggsDecayChannel(
 
       auto children_size = last_child_index - first_child_index;
 
-      // skip intermediate tops that just have another Higgs as children
+      // skip intermediate Higgs that just have another Higgs as children
       if (last_child_index - first_child_index != 2) {
         continue;
       }
@@ -728,7 +757,7 @@ int AnalysisFCChh::findHiggsDecayChannel(
 
       // Higgs decay types:
       //  1: Hbb, 2: HWW, 3: Hgg, 4: Htautau, 5: Hcc, 6:HZZ, 7:Hyy, 8:HZy,
-      //  9:Hmumu, 10:Hss
+      //  9:Hmumu, 10:Hss, 11:Hyy*
 
       if (isb(child_1) && isb(child_2)) {
         higgs_decay_type = 1;
@@ -755,7 +784,10 @@ int AnalysisFCChh::findHiggsDecayChannel(
       }
 
       else if (isPhoton(child_1) && isPhoton(child_2)) {
-        higgs_decay_type = 7;
+        higgs_decay_type = 11;
+        if (isStablePhoton(child_1) && isStablePhoton(child_2)) {
+          higgs_decay_type = 7;
+        }
       }
 
       else if ((isZ(child_1) && isPhoton(child_2)) ||
@@ -3207,6 +3239,31 @@ ROOT::VecOps::RVec<edm4hep::MCParticleData> AnalysisFCChh::getPhotonsFromH(
   }
   // std::cout << "Leps from tau-higgs " << counter << std::endl;
   return gamma_list;
+}
+
+// find photons that came from a H->yy decay
+ROOT::VecOps::RVec<int> AnalysisFCChh::getPhotonIndicesFromH(
+  ROOT::VecOps::RVec<edm4hep::MCParticleData> truth_particles,
+  ROOT::VecOps::RVec<podio::ObjectID> parent_ids) {
+
+ROOT::VecOps::RVec<int> gamma_list;
+
+// loop over all truth particles and find stable photons that do not come
+// (directly) from a hadron decay
+for (int i = 0; i < truth_particles.size(); i++) {
+  auto truth_part = truth_particles.at(i);
+  if (isStablePhoton(truth_part)) {
+    bool from_higgs = hasHiggsParent(truth_part, parent_ids, truth_particles);
+    if (isFromHadron(truth_part, parent_ids, truth_particles)) {
+      from_higgs = false;
+    }
+    if (from_higgs) {
+      gamma_list.push_back(i);
+    }
+  }
+}
+// std::cout << "Leps from tau-higgs " << counter << std::endl;
+return gamma_list;
 }
 
 // find b-jets that came from a top->Wb decay

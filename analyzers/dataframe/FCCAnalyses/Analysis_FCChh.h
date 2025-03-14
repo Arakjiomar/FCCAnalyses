@@ -154,11 +154,13 @@ int findHiggsDecayChannel(
 // using their truth-matched particles and true myy
 // only works if we can compute true myy, i.e. if we can reconstruct 
 // both reco photons from the Higgs, and find their truth matched particles
+// constrain true myy between 124.99 and 125.01 GeV, otherwise return none of the photons
 ROOT::VecOps::RVec<bool> IsRecoPhotonFromHiggs(
         ROOT::VecOps::RVec<int> all_reco_idx,
         ROOT::VecOps::RVec<int> all_mc_idx,
         ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> all_reco_particles,
         ROOT::VecOps::RVec<edm4hep::MCParticleData> all_mc_particles,
+        ROOT::VecOps::RVec<podio::ObjectID> parent_ids,
         ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> photons,
         ROOT::VecOps::RVec<int> photons_idx);
 ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> GetRecoPhotonsFromHiggs(
@@ -166,6 +168,7 @@ ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> GetRecoPhotonsFromHiggs(
     ROOT::VecOps::RVec<int> all_mc_idx,
     ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> all_reco_particles,
     ROOT::VecOps::RVec<edm4hep::MCParticleData> all_mc_particles,
+    ROOT::VecOps::RVec<podio::ObjectID> parent_ids,
     ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> photons,
     ROOT::VecOps::RVec<int> photons_idx);
 ROOT::VecOps::RVec<int> GetRecoPhotonIndicesFromHiggs(
@@ -173,6 +176,7 @@ ROOT::VecOps::RVec<int> GetRecoPhotonIndicesFromHiggs(
     ROOT::VecOps::RVec<int> all_mc_idx,
     ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> all_reco_particles,
     ROOT::VecOps::RVec<edm4hep::MCParticleData> all_mc_particles,
+    ROOT::VecOps::RVec<podio::ObjectID> parent_ids,
     ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> photons,
     ROOT::VecOps::RVec<int> photons_idx);
 // truth level fct to get a Z->ll truth decay
@@ -420,6 +424,13 @@ bool hasHiggsParent(
     edm4hep::MCParticleData truth_part,
     ROOT::VecOps::RVec<podio::ObjectID> parent_ids,
     ROOT::VecOps::RVec<edm4hep::MCParticleData> truth_particles);
+ROOT::VecOps::RVec<bool> hasHiggsParent(
+    ROOT::VecOps::RVec<int> my_reco_particles,
+    ROOT::VecOps::RVec<int> recind,
+    ROOT::VecOps::RVec<int> mcind,
+    ROOT::VecOps::RVec<edm4hep::ReconstructedParticleData> reco_particles,
+    ROOT::VecOps::RVec<podio::ObjectID> parent_ids,
+    ROOT::VecOps::RVec<edm4hep::MCParticleData> truth_particles);
 bool hasTopParent(
     edm4hep::MCParticleData truth_part,
     ROOT::VecOps::RVec<podio::ObjectID> parent_ids,
@@ -451,6 +462,9 @@ getLepsFromZ(ROOT::VecOps::RVec<edm4hep::MCParticleData> truth_particles,
              ROOT::VecOps::RVec<podio::ObjectID> parent_ids);
 ROOT::VecOps::RVec<edm4hep::MCParticleData>
 getPhotonsFromH(ROOT::VecOps::RVec<edm4hep::MCParticleData> truth_particles,
+                ROOT::VecOps::RVec<podio::ObjectID> parent_ids);
+ROOT::VecOps::RVec<int>
+getPhotonIndicesFromH(ROOT::VecOps::RVec<edm4hep::MCParticleData> truth_particles,
                 ROOT::VecOps::RVec<podio::ObjectID> parent_ids);
 ROOT::VecOps::RVec<edm4hep::MCParticleData>
 getBJetsFromTop(ROOT::VecOps::RVec<edm4hep::MCParticleData> truth_particles,
