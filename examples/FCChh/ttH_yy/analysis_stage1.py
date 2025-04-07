@@ -32,8 +32,10 @@ class Analysis():
             # # If you want to process only part of the events, split the output into chunks or give a different name to the output use the optional arguments
             # # or leave blank to use defaults = run the full statistics in one output file named the same as the process:
             # ttH(yy) signal
-            'mgp8_pp_tth01j_5f_84TeV_haaexcl' : {'chunks': 100},
+            #'mgp8_pp_tth01j_5f_84TeV_haaexcl' : {'chunks': 100},
+            'mgp8_pp_tth_5f_50TeV' : {'chunks': 100},
             # Backgrounds 
+             'mgp8_pp_ttyy_5f_50TeV' : {'chunks': 100},
            # 'mgp8_pp_ttaa01j_5f_84TeV': {'chunks':100}, #ttyy+jets
            # 'mgp8_pp_Vaajj_HF_5f_84TeV' : {'chunks': 100}, #V+yy+bb/cc
             # HH->bbyy test
@@ -42,11 +44,11 @@ class Analysis():
 
         # Mandatory: Input directory where to find the samples, or a production tag when running over the centrally produced
         # samples (this points to the yaml files for getting sample statistics)
-        self.input_dir = '/eos/experiment/fcc/hh/generation/DelphesEvents/fcc_v07/II/'
+        self.input_dir = '/eos/home-o/oarakji/tth/myRoot/fcc_v07/II'
         #self.input_dir =  '/eos/user/b/bistapf/FCChh_sample_testers/'
 
         # Optional: output directory, default is local running directory
-        self.output_dir = '/eos/user/e/elmazzeo/ttH@FCC-hh/results/2025-03-10' + '/ntuples/'
+        self.output_dir = '/eos/home-o/oarakji/tth/myAnalysis'
 
         # Optional: analysisName, default is ''
         self.analysis_name = 'FCC-hh ttH(yy) analysis'
