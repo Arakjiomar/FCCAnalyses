@@ -33,9 +33,23 @@ class Analysis():
             # # or leave blank to use defaults = run the full statistics in one output file named the same as the process:
             # ttH(yy) signal
             #'mgp8_pp_tth01j_5f_84TeV_haaexcl' : {'chunks': 100},
-            'mgp8_pp_tth_5f_50TeV' : {'chunks': 100},
-            # Backgrounds 
-             'mgp8_pp_ttyy_5f_50TeV' : {'chunks': 100},
+
+            # 'mgp8_pp_tth_5f_50TeV' : {'chunks': 100},
+            # 'mgp8_pp_tth_5f_50TeV_backup10k' : {'chunks': 100},
+            'mgp8_pp_tth01j_5f_50TeV' : {'chunks': 100},
+
+
+            # # Backgrounds 
+            # # 'mgp8_pp_ttyy_5f_50TeV' : {'chunks': 100},
+            'mgp8_pp_ttaa01j_5f_50TeV' : {'chunks': 100}, # ttyy sample with 0,1 jet matching
+            'mgp8_pp_vbf_h01j_5f_50TeV' : {'chunks': 100}, # vbf sample with 0,1 jet matching
+            # 'mgp8_pp_vh012j_5f_50TeV' : {'chunks': 100}, # zh, wh, yh sample with 0,1 and 2 jet matching
+            'mgp8_pp_th12j_5f_50TeV' : {'chunks': 100},
+            # 'mgp8_pp_h01j_5f_50TeV' : {'chunks': 100},
+            # 'mgp8_pp_thw01j_5f_50TeV': {'chunks': 100},
+
+
+            # 'mgp8_pp_ttyy_5f_50TeV_backup10k' : {'chunks': 100},
            # 'mgp8_pp_ttaa01j_5f_84TeV': {'chunks':100}, #ttyy+jets
            # 'mgp8_pp_Vaajj_HF_5f_84TeV' : {'chunks': 100}, #V+yy+bb/cc
             # HH->bbyy test
@@ -44,11 +58,11 @@ class Analysis():
 
         # Mandatory: Input directory where to find the samples, or a production tag when running over the centrally produced
         # samples (this points to the yaml files for getting sample statistics)
-        self.input_dir = '/eos/home-o/oarakji/tth/myRoot/fcc_v07/II'
+        self.input_dir = '/eos/home-o/oarakji/tth/myRoot/fcc_v07/II/'
         #self.input_dir =  '/eos/user/b/bistapf/FCChh_sample_testers/'
 
         # Optional: output directory, default is local running directory
-        self.output_dir = '/eos/home-o/oarakji/tth/myAnalysis'
+        self.output_dir = '/eos/home-o/oarakji/tth/myAnalysis/'
 
         # Optional: analysisName, default is ''
         self.analysis_name = 'FCC-hh ttH(yy) analysis'
@@ -57,7 +71,7 @@ class Analysis():
         # self.n_threads = 4
 
         # Optional: running on HTCondor, default is False
-        self.run_batch = True
+        self.run_batch = True 
 
         # Optional: Use weighted events
         self.do_weighted = True 
@@ -66,9 +80,8 @@ class Analysis():
         self.use_data_source = False # explicitly use old way in this version 
 
         # Optional: test file that is used if you run with the --test argument 
-        self.test_file = 'root://eospublic.cern.ch//eos/experiment/fcc/hh/' \
-                         'generation/DelphesEvents/fcc_v07/II/mgp8_pp_tth01j_5f_84TeV_haaexcl/' \
-                         'events_119603512.root'
+        self.test_file = '/eos/home-o/oarakji/tth/myRoot/fcc_v07/II/mgp8_pp_tth_5f_50TeV/' \
+                         'events_020084048.root'
 
 
     # Mandatory: analyzers function to define the analysis graph, please make
@@ -90,6 +103,8 @@ class Analysis():
             # all photons passing particle ID
             .Define("gamma",  "FCCAnalyses::ReconstructedParticle::get(Photon_objIdx.index, ReconstructedParticles)")
             .Define("idx_gamma",  "FCCAnalyses::ReconstructedParticle::get_idx(gamma)")
+            # num photons before cut
+            # .Define("n_photons_nocut", "FCCAnalyses::ReconstructedParticle::get_n(gamma)")
             # apply pT selection
             .Define("selpt_gamma", "FCCAnalyses::ReconstructedParticle::sel_pt({photon_pt})(gamma)".format(photon_pt=self.ana_args.photon_pt))
             .Define("idx_selpt_gamma", "FCCAnalyses::ReconstructedParticle::sel_pt({photon_pt})(gamma, idx_gamma)".format(photon_pt=self.ana_args.photon_pt))
@@ -133,8 +148,8 @@ class Analysis():
             .Define("idx_y2", "(n_photons > 1) ? idx_sel_gamma1[1] : -999.")
             .Define("DR_y_y", "(n_photons > 1) ? FCCAnalyses::ReconstructedParticle::get_tlv(sel_gamma[0]).DeltaR(FCCAnalyses::ReconstructedParticle::get_tlv(sel_gamma[1])) : -999.")
             # reco-to-MC particle association
-            .Alias("MCRecoAssociations0", "_MCRecoAssociations_from.index")
-            .Alias("MCRecoAssociations1", "_MCRecoAssociations_to.index")
+            .Alias("MCRecoAssociations0", "_RecoMCLink_from.index")
+            .Alias("MCRecoAssociations1", "_RecoMCLink_to.index")
             .Define("true_TLV", "ReconstructedParticle2MC::getRP2MC_tlv(MCRecoAssociations0, MCRecoAssociations1, ReconstructedParticles, Particle)")
             .Define("pdgID_y1", "(idx_y1 >= 0 ) ? ReconstructedParticles.PDG.at(idx_y1) : -999")
             .Define("pdgID_y2", "(idx_y2 >= 0 ) ? ReconstructedParticles.PDG.at(idx_y2) : -999")

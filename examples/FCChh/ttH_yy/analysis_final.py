@@ -1,17 +1,31 @@
 import os 
 
 #Input directory where the files produced at the pre-selection level are
-inputDir= os.environ.get('ttH_yy_DIR') + '/ntuples/'
+inputDir= '/eos/home-o/oarakji/tth/myAnalysis/'
 
 #Input directory where the files produced at the pre-selection level are
-outputDir  = os.environ.get('ttH_yy_DIR') + '/final/'
+outputDir  = '/eos/home-o/oarakji/tth/myFinalAnalyses/nc/'
 
 processList = {
     #Signal
     #'mgp8_pp_tth01j_5f_haa':{}, #output file from analysis_stage1.py
-    'mgp8_pp_tth01j_5f_84TeV_haaexcl':{}, #output file from analysis_stage1.py
+    #'mgp8_pp_tth01j_5f_84TeV_haaexcl':{}, #output file from analysis_stage1.py
+    # 'mgp8_pp_tth_5f_50TeV':{},
+    # 'mgp8_pp_tth_5f_50TeV_backup10k':{},
+    'mgp8_pp_tth01j_5f_50TeV' : {},
+
     #Backgrounds
     #'mgp8_pp_ttaa_semilep_5f_100TeV':{} #output file from analysis_stage1.py
+    # 'mgp8_pp_ttyy_5f_50TeV':{},
+    'mgp8_pp_ttaa01j_5f_50TeV':{},
+    # 'mgp8_pp_vbf_h01j_5f_50TeV':{},
+    'mgp8_pp_vh012j_5f_50TeV':{},
+    'mgp8_pp_th12j_5f_50TeV':{},
+    'mgp8_pp_vbf_h01j_5f_50TeV': {},
+    'mgp8_pp_h01j_5f_50TeV' : {},
+    'mgp8_pp_thw01j_5f_50TeV' : {},
+
+    # 'mgp8_pp_ttyy_5f_50TeV_backup10k':{},
     #'mgp8_pp_Vaajj_HF_5f_84TeV' : {}, #output file from analysis_stage1.py
     #'mgp8_pp_ttaa01j_5f_84TeV':{}, #output file from analysis_stage1.py
     #'pwp8_pp_hh_lambda100_5f_hhbbaa' : {}, #output file from analysis_stage1.py
@@ -19,7 +33,7 @@ processList = {
 }
 
 #Link to the dictionary that contains all the cross section informations etc...
-procDict = "/eos/experiment/fcc/hh/utils/FCCDicts/FCChh_procDict_fcc_v07_II.json"
+procDict = "/eos/home-o/oarakji/tth/myFCCDict/FCChh_procDict_fcc_v07_II.json"
 #Note the numbeOfEvents and sumOfWeights are placeholders that get overwritten with the correct values in the samples
 
 #How to add a process that is not in the official dictionary:
@@ -45,6 +59,7 @@ do_weighted = True
 # Dictionary of the list of cuts. The key is the name of the selection that will be added to the output file
 cutList = {
             # cutflow
+            "all_events":                   "n_photons_nocut >=0",
             "nocuts":                       "n_photons >= 0", # all events
             "photons":                      "n_photons > 1 && pT_y1 > 25. && pT_y2 > 25. ", # 2 photons with pT > 25 GeV
             "photons_rel_pt":               "n_photons > 1 && pT_y1 > 25. && pT_y2 > 25. && rel_pT_y1 > 0.35 && rel_pT_y2 > 0.25",
@@ -103,6 +118,7 @@ cutList = {
 # Dictionary for the output variable/histograms. The key is the name of the variable in the output files. "name" is the name of the variable in the input file, "title" is the x-axis label of the histogram, "bin" the number of bins of the histogram, "xmin" the minimum x-axis value and "xmax" the maximum x-axis value.
 histoList = {
     # object multiplicity
+    "n_photons_nocut":{"name":"n_photons_nocut","title":"Number of photons without cuts","bin":15,"xmin":-0.5,"xmax":14.5},
     "n_photons":{"name":"n_photons","title":"Number of photons","bin":15,"xmin":-0.5,"xmax":14.5},
     "n_bjets":{"name":"n_bjets","title":"Number of b-jets","bin":10,"xmin":-0.5,"xmax":9.5},
     "n_jets":{"name":"n_jets","title":"Number of jets","bin":20,"xmin":-0.5,"xmax":19.5},
@@ -111,6 +127,11 @@ histoList = {
     "n_higgs":{"name":"n_higgs","title":"Number of Higgs bosons","bin":5,"xmin":-0.5,"xmax":4.5},
     # final discriminant
     "m_yy":{"name":"m_yy","title":"m_{#gamma#gamma} [GeV]","bin":100,"xmin":0.,"xmax":200., "latex":"$m_{\gamma\gamma}$ [GeV]"},
+
+    # m_yy post cut
+    "m_yy_cut":{"name":"m_yy","title":"m_{#gamma#gamma} [GeV]","bin":100,"xmin":105.,"xmax":145., "latex":"$m_{\gamma\gamma}$ [GeV]"},
+
+
     # add more variables here
     # photon variables
     "E_y1"  :{"name":"E_y1","title":"Leading photon energy [GeV]","bin":50,"xmin":0.,"xmax":500.},
@@ -125,7 +146,16 @@ histoList = {
     "phi_y2":{"name":"phi_y2","title":"Subleading photon #phi","bin":50,"xmin":-3.6,"xmax":3.6,"latex":"Subleading photon $\phi$"},
     "rel_pT_y2":{"name":"rel_pT_y2","title":"Subleading photon p_{T} / m_{#gamma#gamma}","bin":50,"xmin":0.,"xmax":3.,"latex":"Subleading photon $p_{T}/m_{\gamma\gamma}$"},
     #"iso_y2":{"name":"iso_y2","title":"Subleading photon iso variable","bin":50,"xmin":0.,"xmax":0.5,"latex":"Subleading photon iso variable"},
+
+
     "pT_yy" :{"name":"pT_yy","title":"p_{T}^{#gamma#gamma} [GeV]","bin":60,"xmin":0.,"xmax":600.,"latex":"$p_{T}^{\gamma\gamma}$ [GeV]"},
+    # redefining pT_yy ranges
+    "pT_yy_b1" :{"name":"pT_yy","title":"p_{T}^{#gamma#gamma} [GeV]","bin":60,"xmin":0.,"xmax":60.,"latex":"$p_{T}^{\gamma\gamma}$ [GeV]"},
+    "pT_yy_b2" :{"name":"pT_yy","title":"p_{T}^{#gamma#gamma} [GeV]","bin":12,"xmin":60.,"xmax":120.,"latex":"$p_{T}^{\gamma\gamma}$ [GeV]"},
+    "pT_yy_b3" :{"name":"pT_yy","title":"p_{T}^{#gamma#gamma} [GeV]","bin":12,"xmin":120.,"xmax":200.,"latex":"$p_{T}^{\gamma\gamma}$ [GeV]"},
+    "pT_yy_b4" :{"name":"pT_yy","title":"p_{T}^{#gamma#gamma} [GeV]","bin":12,"xmin":200.,"xmax":300.,"latex":"$p_{T}^{\gamma\gamma}$ [GeV]"},
+    "pT_yy_b5" :{"name":"pT_yy","title":"p_{T}^{#gamma#gamma} [GeV]","bin":12,"xmin":300.,"xmax":600.,"latex":"$p_{T}^{\gamma\gamma}$ [GeV]"},
+
     # Truth photons from Higgs
     "HtoYY_n_truth_photons" : {"name":"HtoYY_n_truth_photons","title":"Number of truth photons from Higgs","bin":3,"xmin":-0.5,"xmax":2.5},
     "HtoYY_truth_m_yy" :{"name":"HtoYY_truth_m_yy","title":"Truth m_{#gamma#gamma} from Higgs [GeV]","bin":50,"xmin":105.,"xmax":160., "latex":"Truth $m_{\gamma\gamma}$ [GeV]"},
